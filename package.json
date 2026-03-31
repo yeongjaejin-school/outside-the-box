@@ -1,0 +1,25 @@
+{
+  "name": "outside-the-box",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "build": "gulp build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yeongjaejin-school/outside-the-box.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/yeongjaejin-school/outside-the-box/issues"
+  },
+  "homepage": "https://github.com/yeongjaejin-school/outside-the-box#readme",
+  "devDependencies": {
+    "gulp": "^5.0.1"
+  }
+}

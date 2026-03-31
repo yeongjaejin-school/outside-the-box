@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Outside-the-Box | Game Design Document</title>
+
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background-color: #13263b;
+        color: #f4f4f4;
+        line-height: 1.7;
+      }
+
+      .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 50px 30px 80px;
+      }
+
+      h1 {
+        font-size: 3rem;
+        margin-bottom: 10px;
+      }
+
+      h2 {
+        font-size: 2rem;
+        margin-top: 50px;
+        margin-bottom: 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        padding-bottom: 6px;
+      }
+
+      h3 {
+        margin-top: 25px;
+      }
+
+      .subtitle {
+        color: #d0d8e0;
+        margin-bottom: 5px;
+      }
+
+      .updated {
+        font-style: italic;
+        color: #c0c8d0;
+        margin-bottom: 30px;
+      }
+
+      ul {
+        padding-left: 25px;
+      }
+
+      li {
+        margin-bottom: 8px;
+      }
+
+      .box {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 15px;
+        border-left: 4px solid #6cb6ff;
+        margin: 15px 0;
+        border-radius: 5px;
+      }
+
+      .placeholder {
+        border: 2px dashed rgba(255, 255, 255, 0.3);
+        padding: 20px;
+        text-align: center;
+        margin-top: 10px;
+        margin-bottom: 15px;
+        border-radius: 6px;
+        color: #cfd8e3;
+      }
+
+      .progression-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 18px;
+        margin-top: 20px;
+        margin-bottom: 28px;
+      }
+
+      .progress-card {
+        background: rgba(255, 255, 255, 0.05);
+        border-left: 4px solid #6cb6ff;
+        padding: 18px;
+        border-radius: 8px;
+      }
+
+      .progress-card h3 {
+        margin-top: 0;
+        margin-bottom: 10px;
+        font-size: 1.1rem;
+      }
+
+      .feature-box {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        padding: 20px;
+        border-radius: 8px;
+        margin-top: 22px;
+        margin-bottom: 22px;
+      }
+
+      .feature-box h3 {
+        margin-top: 0;
+        color: #6cb6ff;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <h1>Outside-the-Box</h1>
+      <div class="subtitle">Game Design Document</div>
+      <div class="subtitle">By Sean Moore and Yeongjae (Jake) Jin</div>
+      <p class="updated">Last Updated: March 31, 2026</p>
+
+      <h2>1. Game Overview</h2>
+      <p>
+        Outside-the-Box is an annoying, brain-teasing puzzle game built around
+        subverting player expectations. Unlike traditional games where mechanics
+        are taught through tutorials, this game challenges the player to think
+        laterally, question assumptions, and interpret problems creatively.
+        Progress is achieved by completing a sequence of exam-like levels using
+        a combination of logic, keyboard precision, and mouse interaction.
+      </p>
+
+      <h2>2. Technology</h2>
+      <p>
+        Outside-the-Box will be developed for the Windows Platform using
+        Wolfie2D game engine, which is developed by Richard McKenna for 2D
+        games. Web Graphics Libraries (WebGL) will be used as the underlying
+        rendering technology.
+      </p>
+
+      <h2>3. Story & Setting</h2>
+      <p>
+        In today’s professional world, everyone claims to be an “innovator” and
+        a “problem solver,” but there is no objective way to verify it. The
+        Outside-the-Box (O-t-B) Certification exam was created as the world’s
+        first standardized exam to test true critical thinking ability. Those
+        who pass can officially claim they can “think outside the box” and put
+        any associated skills on their resumes with a certificate to back it up.
+      </p>
+
+      <h2>4. Objective</h2>
+      To earn the certification, the player must complete every question/level
+      on the exam.
+      <ul>
+        <li>Levels must be completed in a pre-set sequence</li>
+        <li>
+          A player is allowed three incorrect answer submissions throughout the
+          exam before failing
+        </li>
+        <li>Failing resets progress to level 1</li>
+        <li>
+          Completing all levels signifies passing the exam and awards the player
+          with the O-t-B certification
+        </li>
+      </ul>
+
+      <h2>5. Gameplay Progression</h2>
+
+      <p>
+        Outside-the-Box is structured like a certification exam that escalates
+        over time. Early levels introduce the player to the game’s deceptive
+        style, then later levels combine unconventional puzzle solving with
+        mechanical skill challenges. By the end of the exam, the player is
+        expected to think quickly, question assumptions, and adapt to hidden
+        mechanics.
+      </p>
+
+      <div class="progression-grid">
+        <div class="progress-card">
+          <h3>Phase 1: Introduction/Witty Nature</h3>
+          <p>
+            Each level is designed to challenge the player in a different way.
+            The first chunk of questions, roughly five to ten levels, introduces
+            the witty and deceptive nature of the exam.
+          </p>
+        </div>
+
+        <div class="progress-card">
+          <h3>Phase 2: Mechanical Skill</h3>
+          <p>
+            After the first chunk of brain-teasing questions, the second chunk
+            begins to test the player’s mechanical skill. Players navigate a 
+            rectangular arena filled with alphanumeric and symbolic blocks, tasked 
+            with arranging them in a designated Answer Zone to solve various equations or word puzzles.
+          </p>
+        </div>
+
+        <div class="progress-card">
+          <h3>Phase 3: Full Exam Chaos</h3>
+          <p>
+            Once the player is comfortable, the exam becomes much harsher. From
+            that point onward, progress requires a true combination of wit and
+            skill. Every level has its own quirks, but correct answers, wrong
+            answers, and scene transitions will still be reinforced through
+            consistent audio and animation feedback.
+          </p>
+        </div>
+      </div>
+
+      <div class="feature-box">
+        <h3>Phase 1 Example: Solve the math problem!</h3>
+        <p>
+          You are on question 6. You are asked to solve a complex math problem.
+          After finding the answer to be 6, you will notice none of the answer
+          choices are 6. The player can only progress by clicking the 6 in the
+          part of the HUD that displays the level they are on.
+        </p>
+      </div>
+
+      <div class="feature-box">
+        <h3>Phase 2 Example: The Maze</h3>
+        <p>
+          You will be put in a maze and chased by an enemy. You must reach the
+          end of the maze without being caught.
+        </p>
+      </div>
+
+      <div class="feature-box">
+        <h3>Phase 3 Example: Pong!</h3>
+        <p>
+          Around level 8, the player may be asked to play Pong against an AI
+          opponent that is decent but beatable. Later, around level 18, the
+          player faces the AI again. This time the AI has near-perfect ball
+          tracking, making the match feel impossible.
+        </p>
+        <p>
+          The trick is that the player is no longer limited to the normal
+          controls. To win, they must figure out that the mouse can now be used
+          to grab the AI paddle and hold it in place long enough to score. This
+          level represents the core philosophy of the game: the solution exists,
+          but only for players willing to challenge their own assumptions.
+        </p>
+      </div>
+
+      <div class="feature-box">
+        <h3>Endgame Page</h3>
+        <p>
+          If the player completes the exam, they will be presented with a
+          summary of their performance and a certificate based on their score.
+        </p>
+        <ul>
+          <li><strong>Bronze Certificate:</strong> Completed the exam</li>
+          <li>
+            <strong>Silver Certificate:</strong> Completed the exam within a
+            certain time frame
+          </li>
+          <li>
+            <strong>Gold Certificate:</strong> Completed the exam within a
+            certain time frame and fulfilled a secret side objective
+          </li>
+        </ul>
+        <p>
+          (The current idea for the secret side objective is to hide a recurring
+          character throughout the exam and require the player to notice and
+          interact with them in every appearance.)
+        </p>
+      </div>
+
+      <h2>6. Example Levels</h2>
+
+      <h3>Witty / Deceptive Levels</h3>
+
+      <div class="box">
+        <h3>Level 1 – Name Entry</h3>
+        <p>
+          The player is simply asked to enter their name. This seems harmless at
+          first, but the same name must be remembered and entered again in the
+          final level.
+        </p>
+      </div>
+
+      <div class="box">
+        <h3>Level 2 – Terms of Agreement</h3>
+        <p>
+          The player must agree to a Terms of Service screen filled with
+          meaningless placeholder text. Clicking “Agree” too early costs a life.
+          The only safe way to proceed is to scroll all the way to the bottom,
+          where a message thanks the player for actually reading the terms.
+        </p>
+      </div>
+
+      <div class="box">
+        <h3>Level 3 – Basic Math</h3>
+        <p>
+          The player is asked a simple question: “What is the square root of
+          121?” Unlike many other levels, this one is straightforward. The
+          correct answer, 11, is one of the visible choices.
+        </p>
+      </div>
+
+      <div class="box">
+        <h3>Level 4 – Click the Dot</h3>
+        <p>
+          The prompt reads “Click the dot.” None of the answer choices are
+          actual dots. The real solution is to click the dot above the letter
+          <em>i</em> in the question itself.
+        </p>
+      </div>
+
+      <div class="box">
+        <h3>Level 5 – Stay Calm</h3>
+        <p>
+          A bomb appears with a countdown timer while a nearby man repeatedly
+          tells the player to stay calm. Wires extend from the bomb, and the
+          cursor becomes a wire cutter. Cutting any wire costs a life. The
+          correct solution is to do nothing and wait for the timer to expire.
+        </p>
+      </div>
+
+      <h3>Mechanical Skill Levels</h3>
+
+      <div class="box">
+        <h3>Level 8 – Pong</h3>
+        <p>
+          A literal game of Pong. The player must defeat a beatable AI opponent
+          using standard paddle controls.
+        </p>
+      </div>
+
+      <div class="box">
+        <h3>Level 9 – Typing Test</h3>
+        <p>
+          The player must type a preset paragraph accurately within a time
+          limit. This level tests speed, composure, and keyboard precision under
+          pressure.
+        </p>
+      </div>
+
+      <div class="box">
+        <h3>Level 10 – The Maze</h3>
+        <p>
+          The player navigates a maze while being chased by an AI demon.
+          Reaching the exit without getting caught clears the level.
+        </p>
+      </div>
+
+      <div class="box">
+        <h3>Level 11 – Block Combination Tutorial</h3>
+        <p>
+          The player is introduced to the mechanics of combining blocks in the
+          arena. They must arrange blocks to solve a simple equation, such as
+          2 + 3 = 5, by dragging and dropping the correct blocks into the
+          Answer Zone.
+        </p>
+      </div>
+
+      <div class="box">
+        <h3>Level 12 – Exploding Blocks</h3>
+        <p>
+          The player must solve a puzzle by combining blocks, but some blocks
+          are unstable and will explode if held for too long. The player must
+          quickly identify and use the stable blocks to complete the equation
+          before time runs out.
+        </p>
+      </div>
+
+      <h3>Tougher Late-Game Questions</h3>
+
+      <div class="box">
+        <h3>Level 15 – "Number of seconds you have left to solve this"</h3>
+        <p>
+          The player must use countdown block to solve a puzzle. The block gradually
+          counts down from n seconds,and the player must use it at the right moment 
+          to complete the equation before it hits zero.
+        </p>
+      </div>
+
+      <div class="box">
+        <h3>Level 18 – The answer is "Not found".</h3>
+        <p>
+          The player has blocks of alphabets and numbers. It looks like a word puzzle, but
+          the correct answer is actually 404, where all number blocks are hidden as invisible
+          and the player must figure out to use the invisible blocks to solve the question.
+        </p>
+      </div>
+
+      <div class="box">
+        <h3>Level 19 – Find Gold!</h3>
+        <p>
+          There are multiple answers to this question. The player can submit AU,79,Gold, or 
+          a block that is colored gold. Each answer is accepted as correct, but time limit
+          won't allow to think through all the possibilities, so the player must quickly identify one of the correct
+          answers to pass the level.
+        </p>
+      </div>
+
+      <div class="box">
+        <h3>Level 20 – Empty the box.</h3>
+        <p>
+          The map is filled with heavy blocks that is very difficult to move. 
+          The answer zone is also filled with the blocks, so the player must find
+          invisible countdown blocks to blow up everything in the map to clear the level.
+        </p>
+      </div>
+
+      <div class="box">
+        <h3>Level 21 – Tortoise vs. Hare</h3>
+        <p>
+          The player controls Turbo the Tortoise and must collect letter blocks
+          spelling “TURBO” before the Hare collects blocks spelling “HARE.” The
+          obvious path fails. The winning move is to collect the farthest block,
+          <strong>T</strong>, first, which grants a speed boost needed to finish
+          in time.
+        </p>
+      </div>
+
+      <h2>7. Controls</h2>
+      <p>
+        While controls may vary from level to level, the following are the
+        standard controls throughout the exam
+      </p>
+      <ul>
+        <li>W – Move up</li>
+        <li>A – Move left</li>
+        <li>S – Move down</li>
+        <li>D – Move right</li>
+        <li>H – Hold a Block</li>
+        <li>Left Click – Interact</li>
+        <li>Esc – Pause</li>
+      </ul>
+
+      <h2>8. GUI (Wireframes Required)</h2>
+
+      <h3>Splash Screen</h3>
+      <div class="placeholder">Add image here</div>
+
+      <h3>Main Menu</h3>
+      <div class="placeholder">Add image here</div>
+
+      <h3>Level Select</h3>
+      <div class="placeholder">Add image here</div>
+
+      <h3>Controls Screen</h3>
+      <div class="placeholder">Add image here</div>
+
+      <h3>Help Screen</h3>
+      <div class="placeholder">Add image here</div>
+
+      <h3>In-Game Screen</h3>
+      <div class="placeholder">Add image here</div>
+
+      <h2>9. Help Screen Content</h2>
+
+      <div class="box">
+        <h3>About the Game</h3>
+        <p>
+          Outside-the-Box is a certification-style puzzle game designed to test
+          true critical thinking. Players must complete a sequence of
+          unconventional levels by questioning assumptions and discovering
+          hidden mechanics.
+        </p>
+      </div>
+
+      <div class="box">
+        <h3>Developers</h3>
+        <p>Sean Moore and Yeongjae (Jake) Jin</p>
+      </div>
+
+      <div class="box">
+        <h3>How to Play</h3>
+        <ul>
+          <li>
+            Read each question carefully — the obvious answer is often wrong
+          </li>
+          <li>Use both mouse and keyboard interactions</li>
+          <li>You are allowed only three mistakes before failing the exam</li>
+          <li>Some solutions may require interacting outside answer choices</li>
+        </ul>
+      </div>
+
+      <div class="box">
+        <h3>Cheat Codes (For Testing)</h3>
+        <ul>
+          <li>
+            <strong>On the First Question, enter your name as cse380TA</strong>:
+            You will get access to features such as a skip button, unlimited
+            lives, and your pause screen will be modified to have a level
+            selector
+          </li>
+        </ul>
+      </div>
+
+      <h2>10. Artwork</h2>
+      <div class="placeholder">Add logo and assets here</div>
+    </div>
+  </body>
+</html>
