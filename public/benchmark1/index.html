@@ -116,7 +116,7 @@
       <h1>Outside-the-Box</h1>
       <div class="subtitle">Game Design Document</div>
       <div class="subtitle">By Sean Moore and Yeongjae (Jake) Jin</div>
-      <p class="updated">Last Updated: March 30, 2026</p>
+      <p class="updated">Last Updated: March 31, 2026</p>
 
       <h2>1. Game Overview</h2>
       <p>
@@ -187,11 +187,9 @@
           <h3>Phase 2: Mechanical Skill</h3>
           <p>
             After the first chunk of brain-teasing questions, the second chunk
-            begins to test the player’s mechanical skill. These levels may
-            involve gameplay such as Pong or navigating a maze while being
-            chased by an enemy. This part of the exam uses the Wolfie2D engine
-            more heavily and warms up the player’s reflexes for the harder
-            levels ahead.
+            begins to test the player’s mechanical skill. Players navigate a 
+            rectangular arena filled with alphanumeric and symbolic blocks, tasked 
+            with arranging them in a designated Answer Zone to solve various equations or word puzzles.
           </p>
         </div>
 
@@ -345,62 +343,61 @@
       </div>
 
       <div class="box">
-        <h3>Level 11 – The Maze 2</h3>
+        <h3>Level 11 – Block Combination Tutorial</h3>
         <p>
-          A more advanced maze challenge. The player now has up to three
-          wall-breaking shots using the <strong>X</strong> key, which are
-          necessary for escaping dead ends and reaching the goal safely.
+          The player is introduced to the mechanics of combining blocks in the
+          arena. They must arrange blocks to solve a simple equation, such as
+          2 + 3 = 5, by dragging and dropping the correct blocks into the
+          Answer Zone.
         </p>
       </div>
 
       <div class="box">
-        <h3>Level 12 – Dino Run</h3>
+        <h3>Level 12 – Exploding Blocks</h3>
         <p>
-          A parody of the classic dinosaur runner game. The twist is that the
-          player can only pass by intentionally colliding with one specific
-          obstacle or entity instead of avoiding everything on screen.
+          The player must solve a puzzle by combining blocks, but some blocks
+          are unstable and will explode if held for too long. The player must
+          quickly identify and use the stable blocks to complete the equation
+          before time runs out.
         </p>
       </div>
 
       <h3>Tougher Late-Game Questions</h3>
 
       <div class="box">
-        <h3>Level 15 – Photographic Memory</h3>
+        <h3>Level 15 – "Number of seconds you have left to solve this"</h3>
         <p>
-          A long number is flashed on screen for one second and then disappears.
-          The player is then asked to type it from memory. The hidden solution
-          is to pause the game during the flash, allowing the number to remain
-          visible behind the pause overlay long enough to copy down.
+          The player must use countdown block to solve a puzzle. The block gradually
+          counts down from n seconds,and the player must use it at the right moment 
+          to complete the equation before it hits zero.
         </p>
       </div>
 
       <div class="box">
-        <h3>Level 18 – Pong Rematch</h3>
+        <h3>Level 18 – The answer is "Not found".</h3>
         <p>
-          The player faces the Pong AI again, but this time the opponent has
-          near-perfect tracking and cannot be beaten through normal play. The
-          real solution is to use the mouse to grab the AI paddle and hold it in
-          place long enough to score.
+          The player has blocks of alphabets and numbers. It looks like a word puzzle, but
+          the correct answer is actually 404, where all number blocks are hidden as invisible
+          and the player must figure out to use the invisible blocks to solve the question.
         </p>
       </div>
 
       <div class="box">
-        <h3>Level 19 – The Bright Maze</h3>
+        <h3>Level 19 – Find Gold!</h3>
         <p>
-          Another maze challenge appears, complete with an enemy and projectile
-          mechanic, but the walls are invisible. The only way to reveal them is
-          to pause the game and lower the brightness in the pause menu before
-          continuing.
+          There are multiple answers to this question. The player can submit AU,79,Gold, or 
+          a block that is colored gold. Each answer is accepted as correct, but time limit
+          won't allow to think through all the possibilities, so the player must quickly identify one of the correct
+          answers to pass the level.
         </p>
       </div>
 
       <div class="box">
-        <h3>Level 20 – How Many Holes Were Dug?</h3>
+        <h3>Level 20 – Empty the box.</h3>
         <p>
-          A construction worker asks how many holes were dug in his lot, yet no
-          holes are visible and every answer choice is greater than zero. The
-          player must click the worker’s backpack, take out a shovel, and dig
-          holes manually until one of the listed answers becomes correct.
+          The map is filled with heavy blocks that is very difficult to move. 
+          The answer zone is also filled with the blocks, so the player must find
+          invisible countdown blocks to blow up everything in the map to clear the level.
         </p>
       </div>
 
@@ -425,6 +422,7 @@
         <li>A – Move left</li>
         <li>S – Move down</li>
         <li>D – Move right</li>
+        <li>H – Hold a Block</li>
         <li>Left Click – Interact</li>
         <li>Esc – Pause</li>
       </ul>
