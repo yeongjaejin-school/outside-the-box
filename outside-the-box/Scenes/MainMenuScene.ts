@@ -22,14 +22,14 @@ const MainMenuEvent = {
 	CONTROLS: "CONTROLS",
 	ABOUT: "ABOUT",
 	MENU: "MENU",
-    PLAY_RECORDING: "PLAY_RECORDING"
 } as const;
 
+
 export default class MainMenu extends Scene {
-    // Layers, for multiple main menu screens
-    private mainMenu: Layer;
-    private controls: Layer;
-    private about: Layer;
+    // Layers
+    private mainMenu!: Layer;
+    private controls!: Layer;
+    private about!: Layer;
 
     public override startScene(){
         const center = this.viewport.getCenter();
@@ -75,7 +75,6 @@ export default class MainMenu extends Scene {
         playRecording.borderWidth = 2;
         playRecording.borderColor = Color.WHITE;
         playRecording.backgroundColor = Color.TRANSPARENT;
-        playRecording.onClickEventId = MainMenuEvent.PLAY_RECORDING;
 
         const header = <Label>this.add.uiElement(UIElementType.LABEL, MainMenuLayer.CONTROLS, {position: new Vec2(center.x, center.y - 250), text: "Controls"});
         header.textColor = Color.WHITE;
@@ -125,7 +124,6 @@ export default class MainMenu extends Scene {
         this.receiver.subscribe(MainMenuEvent.CONTROLS);
         this.receiver.subscribe(MainMenuEvent.ABOUT);
         this.receiver.subscribe(MainMenuEvent.MENU);
-        this.receiver.subscribe(MainMenuEvent.PLAY_RECORDING);
     }
 
     public override updateScene(){
