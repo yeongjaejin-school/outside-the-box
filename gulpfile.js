@@ -21,7 +21,7 @@ const paths = {
 const VERSIONS = {
     benchmark2: { entry: 'benchmark2/main.ts', outDir: 'benchmark2' },
     benchmark3: { entry: 'benchmark3/main.ts', outDir: 'benchmark3' },
-    final:     { entry: 'final/main.ts',      outDir: 'final' }
+    final:     { entry: 'final/main.ts',      outDir: '' }
 };
 
 // --------------------------------------
