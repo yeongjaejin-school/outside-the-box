@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
   <head>
     <meta charset="UTF-8" />
@@ -8,6 +8,7 @@
         display: flex;
         flex-direction: row;
         justify-content: center;
+        color: blueviolet;
       }
 
       #game-window {
@@ -20,6 +21,7 @@
         position: absolute;
         top: 0px;
         left: 0px;
+        color: tomato;
       }
 
       #text-canvas {
@@ -41,8 +43,8 @@
       }
 
       @font-face {
-        font-family: 'NoPixel';
-        src: url('hw4_assets/fonts/NoPixel.ttf');
+        font-family: "NoPixel";
+        src: url("hw4_assets/fonts/NoPixel.ttf");
       }
     </style>
   </head>
@@ -61,8 +63,7 @@
       <!-- This contains stats about the game for development purposes, such as the average update time -->
       <div id="stats" hidden>
         <canvas id="stats-canvas"></canvas>
-        <select name="Display" id="chart-option">
-        </select>
+        <select name="Display" id="chart-option"></select>
         <div id="stats-display"></div>
       </div>
     </div>
