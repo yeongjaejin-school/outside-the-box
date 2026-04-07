@@ -1,4 +1,4 @@
-console.log("[benchmark2] file loaded");
+console.log("[benchmark2] main.ts loaded");
 
 window.onload = () => {
   console.log("[benchmark2] window.onload fired");
@@ -22,7 +22,7 @@ window.onload = () => {
   });
 
   if (!gameCanvas || !debugCanvas || !textCanvas) {
-    console.error("[benchmark2] Missing one or more required canvas elements.");
+    console.error("[benchmark2] Missing required canvas elements.");
     return;
   }
 
@@ -33,22 +33,16 @@ window.onload = () => {
   textCanvas.width = 800;
   textCanvas.height = 600;
 
-  console.log("[benchmark2] canvas sizes set", {
-    game: [gameCanvas.width, gameCanvas.height],
-    debug: [debugCanvas.width, debugCanvas.height],
-    text: [textCanvas.width, textCanvas.height],
-  });
-
   const ctx = gameCanvas.getContext("2d");
   console.log("[benchmark2] 2d context acquired:", !!ctx);
 
   if (!ctx) {
-    console.error("[benchmark2] Could not get 2D context for game-canvas.");
+    console.error("[benchmark2] Could not acquire 2D context.");
     return;
   }
 
   ctx.fillStyle = "#1a1a1a";
-  ctx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
+  ctx.fillRect(0, 0, 800, 600);
   console.log("[benchmark2] background rendered");
 
   ctx.fillStyle = "#ffffff";
@@ -57,10 +51,10 @@ window.onload = () => {
   ctx.fillText("Outside-the-Box", 400, 140);
 
   ctx.font = "24px Arial";
-  ctx.fillText("Main Menu", 400, 210);
+  ctx.fillText("Main Menu", 400, 220);
 
   ctx.font = "18px Arial";
-  ctx.fillText("Starter page loaded successfully", 400, 270);
+  ctx.fillText("Starter page loaded successfully", 400, 280);
 
   console.log("[benchmark2] starter menu rendered successfully");
 };

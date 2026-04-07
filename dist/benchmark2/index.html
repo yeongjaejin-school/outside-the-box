@@ -1,71 +1,64 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Outside-the-Box - Benchmark 2</title>
     <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #111;
+      }
+
       #main {
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
+        width: 100%;
+        height: 100%;
       }
 
       #game-window {
         position: relative;
+        width: 800px;
+        height: 600px;
+        margin: 0 auto;
+        top: 40px;
       }
 
-      #game-canvas {
-        width: 100%;
-        height: 100%;
+      #game-canvas,
+      #text-canvas,
+      #debug-canvas {
         position: absolute;
-        top: 0px;
-        left: 0px;
-      }
-
-      #text-canvas {
-        width: 100%;
-        height: 100%;
-        position: absolute;
-        top: 0px;
-        left: 0px;
-        pointer-events: none;
+        top: 0;
+        left: 0;
       }
 
       #debug-canvas {
-        width: 100%;
-        height: 100%;
-        position: absolute;
-        top: 0px;
-        left: 0px;
         pointer-events: none;
-      }
-
-      @font-face {
-        font-family: 'NoPixel';
-        src: url('hw4_assets/fonts/NoPixel.ttf');
       }
     </style>
   </head>
   <body>
     <div id="main">
-      <!-- The main window of the game. This contains the rendered game and any debug text -->
       <div id="game-window">
-        <!-- This is the canvas where the actual game is rendered -->
         <canvas id="game-canvas"></canvas>
-        <!-- This is the canvas where text is rendered in WebGL -->
         <canvas id="text-canvas" hidden></canvas>
-        <!-- This is the canvas where the debug text and graphics are rendered -->
         <canvas id="debug-canvas"></canvas>
       </div>
 
-      <!-- This contains stats about the game for development purposes, such as the average update time -->
       <div id="stats" hidden>
         <canvas id="stats-canvas"></canvas>
-        <select name="Display" id="chart-option">
-        </select>
+        <select name="Display" id="chart-option"></select>
         <div id="stats-display"></div>
       </div>
     </div>
+
+    <script>
+      console.log("[benchmark2] index.html loaded");
+    </script>
     <script src="benchmark2.bundle.js"></script>
   </body>
 </html>
