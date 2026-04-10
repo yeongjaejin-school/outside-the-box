@@ -51,6 +51,7 @@ function createBundleTask(name, config) {
             basedir: __dirname,
             debug: true,
             entries: [entryPath],
+            extensions: ['.ts', '.js'],
             cache: {},
             packageCache: {}
         })
