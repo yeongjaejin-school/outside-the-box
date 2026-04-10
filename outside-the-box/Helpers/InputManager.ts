@@ -40,7 +40,7 @@ export class InputManager {
         }
 
         if (this.keys["h"]) {
-            this.emitter.emit(GameEvent.SPECIAL, {});
+            this.emitter.emit(GameEvent.HOLD, {});
         }
     }
 }

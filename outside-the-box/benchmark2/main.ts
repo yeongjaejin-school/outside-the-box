@@ -9,6 +9,11 @@ import { drawPauseOverlay }   from './overlays/PauseOverlay';
 import { drawControlsOverlay } from './overlays/ControlsOverlay';
 import { drawGameOverOverlay } from './overlays/GameOverOverlay';
 
+// Event system and Player input handling
+import { EventEmitter } from "../Helpers/Events/EventEmitter";
+import { InputManager } from "../Helpers/InputManager";
+import { PlayerControl } from "../Helpers/PlayerControl";
+
 window.onload = () => {
   const gameCanvas  = document.getElementById("game-canvas")  as HTMLCanvasElement | null;
   const debugCanvas = document.getElementById("debug-canvas") as HTMLCanvasElement | null;
@@ -46,6 +51,11 @@ window.onload = () => {
     playMode:    "play",
     gameOver:    false,
   };
+
+  // Varaibles for player control and input handling
+  const emitter = new EventEmitter();
+  const input = new InputManager(emitter);
+  const player = new PlayerControl(emitter);
 
   // ── game context ──────────────────────────────────────────────────────────────
   // gc is passed to every draw function so they share ctx, state, and helpers
@@ -189,14 +199,22 @@ window.onload = () => {
   gc.logo.onload  = () => { gc.logoLoaded = true;  gc.render(); };
   gc.logo.onerror = () => { gc.logoLoaded = false; gc.render(); };
 
-  gc.gameplayFrame.onload  = () => { gc.gameplayFrameLoaded = true;  gc.render(); };
-  gc.gameplayFrame.onerror = () => { gc.gameplayFrameLoaded = false; gc.render(); };
-
   gc.logo.src          = "/benchmark2/assets/logo.png";
-  gc.gameplayFrame.src = "/benchmark2/assets/gameplay-frame.png";
 
   // ── startup ───────────────────────────────────────────────────────────────────
 
   resizeCanvases();
   gc.render();
+
+  function gameLoop() {
+  if (gc.state.currentScreen === "level" && !gc.state.paused) {
+      input.update();
+      player.update();
+      gc.render(); // force redraw after movement
+    }
+
+    requestAnimationFrame(gameLoop);
+  }
+
+  gameLoop();
 };

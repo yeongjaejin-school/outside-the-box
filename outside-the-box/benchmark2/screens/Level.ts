@@ -14,6 +14,9 @@ export const drawLevel = (gc: GameContext) => {
   const lvl = state.currentLevel;
   const t   = getTheme(state);
 
+  // Player
+  const player = (gc as any).player;
+
   // Level 1 — name entry
   if (lvl === 1) {
     drawNameEntry(gc);
@@ -50,6 +53,10 @@ export const drawLevel = (gc: GameContext) => {
   ctx.font      = `16px ${bodyFont}`;
   ctx.fillStyle = t.fgDim;
   ctx.fillText("Questions, choices, and interactions will be wired in here.", cx, topBoxY + topBoxHeight * 0.52, topBoxWidth * 0.6);
+
+  // draw player
+  ctx.fillStyle = "red";
+  ctx.fillRect(player.x, player.y, 40, 40);
 
   // Nav row — level select pathway only
   if (state.playMode === "levelselect") {

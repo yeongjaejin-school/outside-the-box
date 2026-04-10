@@ -6,9 +6,15 @@ export class PlayerControl extends EventListener {
     public x: number = 0;
     public y: number = 0;
     private speed: number = 5;
-
+    private sprite: HTMLImageElement;
+    
     constructor(emitter: EventEmitter) {
         super(emitter);
+        this.sprite = new Image();
+        this.sprite.src = "/your/path/player.png";  // Path should be fixed
+
+        this.x = 400; // center-ish
+        this.y = 300;
 
         this.listen<MoveEventPayload>(GameEvent.MOVE, (data) => {
             this.move(data);
