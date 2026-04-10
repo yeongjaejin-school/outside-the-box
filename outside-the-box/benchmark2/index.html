@@ -12,20 +12,20 @@
         width: 100%;
         height: 100%;
         overflow: hidden;
-        background: #111;
+        background: blue;
       }
 
       #main {
-        width: 100%;
-        height: 100%;
+        width: 100vw;
+        height: 100vh;
       }
 
       #game-window {
         position: relative;
-        width: 800px;
-        height: 600px;
-        margin: 0 auto;
-        top: 40px;
+        width: 100vw;
+        height: 100vh;
+        margin: 0;
+        top: 0;
       }
 
       #game-canvas,
@@ -34,10 +34,17 @@
         position: absolute;
         top: 0;
         left: 0;
+        width: 100%;
+        height: 100%;
       }
 
-      #debug-canvas {
+      #debug-canvas,
+      #text-canvas {
         pointer-events: none;
+      }
+
+      #text-canvas {
+        display: none;
       }
     </style>
   </head>
@@ -57,7 +64,7 @@
     </div>
 
     <script>
-      console.log("[benchmark2] index.html loaded");
+      console.log("BENCHMARK 2 HTML LOADED");
     </script>
     <script src="benchmark2.bundle.js"></script>
   </body>

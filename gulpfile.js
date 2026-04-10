@@ -21,7 +21,7 @@ const paths = {
 const VERSIONS = {
     benchmark2: { entry: 'benchmark2/main.ts', outDir: 'benchmark2' },
     benchmark3: { entry: 'benchmark3/main.ts', outDir: 'benchmark3' },
-    final:     { entry: 'final/main.ts',      outDir: '' }
+    final: { entry: 'final/main.ts', outDir: '' }
 };
 
 // --------------------------------------
@@ -35,7 +35,7 @@ function clean() {
 // Copy public folder
 // --------------------------------------
 function copyPublic() {
-    return gulp.src(paths.public)
+    return gulp.src(paths.public, { encoding: false })
         .pipe(gulp.dest(paths.dist));
 }
 
@@ -54,15 +54,15 @@ function createBundleTask(name, config) {
             cache: {},
             packageCache: {}
         })
-        .transform('babelify', {
-            presets: ['@babel/preset-env', '@babel/preset-typescript'],
-            extensions: ['.ts', '.js']
-        })
-        .bundle()
-        .on('error', fancy_log)
-        .pipe(source(`${name}.bundle.js`))
-        .pipe(buffer())
-        .pipe(gulp.dest(outputFolder));   // <-- CHANGED
+            .transform('babelify', {
+                presets: ['@babel/preset-env', '@babel/preset-typescript'],
+                extensions: ['.ts', '.js']
+            })
+            .bundle()
+            .on('error', fancy_log)
+            .pipe(source(`${name}.bundle.js`))
+            .pipe(buffer())
+            .pipe(gulp.dest(outputFolder));   // <-- CHANGED
     };
 }
 
