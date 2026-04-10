@@ -4,6 +4,7 @@ import { GameEvent, MoveEventPayload } from "./Events/Event.ts";
 export class InputManager {
     private keys: { [key: string]: boolean } = {};
     private emitter: EventEmitter;
+    private readonly movementKeys = new Set(["w", "a", "s", "d", " ", "h"]);
 
     constructor(emitter: EventEmitter) {
         this.emitter = emitter;
@@ -15,11 +16,19 @@ export class InputManager {
     private onKeyDown(event: KeyboardEvent) {
         const key = event.key.toLowerCase();
         this.keys[key] = true;
+
+        if (this.movementKeys.has(key)) {
+            event.preventDefault();
+        }
     }
 
     private onKeyUp(event: KeyboardEvent) {
         const key = event.key.toLowerCase();
         this.keys[key] = false;
+
+        if (this.movementKeys.has(key)) {
+            event.preventDefault();
+        }
     }
 
     public update() {

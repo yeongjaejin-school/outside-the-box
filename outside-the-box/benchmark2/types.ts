@@ -24,6 +24,17 @@ export interface HitArea {
   action: () => void;
 }
 
+export interface PlayerEntity {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  update: () => void;
+  draw: (ctx: CanvasRenderingContext2D) => void;
+  setBounds: (minX: number, minY: number, maxX: number, maxY: number) => void;
+  resetPosition: (x: number, y: number) => void;
+}
+
 export interface GameContext {
   ctx: CanvasRenderingContext2D;
   state: GameState;
@@ -37,4 +48,5 @@ export interface GameContext {
   gameplayFrame: HTMLImageElement;
   logoLoaded: boolean;
   gameplayFrameLoaded: boolean;
+  player: PlayerEntity;
 }
