@@ -1,4 +1,4 @@
-export const LEVEL_COUNT = 20;
+export const LEVEL_COUNT = 30;
 
 export interface LevelEntry {
   title: string;
@@ -27,4 +27,14 @@ export const LEVEL_DATA: LevelEntry[] = [
   { title: "Q18", lines: ["This question is still being prepared.", "Stand by, candidate."] },
   { title: "Q19", lines: ["This question is still being prepared.", "Stand by, candidate."] },
   { title: "Q20", lines: ["This question is still being prepared.", "Stand by, candidate."] },
+  { title: "Q21", lines: ["Please review the attached candidate profile.", "Make your hiring decision below."] },
+  { title: "Q22", lines: ["The equation above is incorrect.", "Add exactly one straight line to fix it."] },
+  { title: "Q23", lines: ["The screensaver has been running for seventeen years.", "No one has witnessed a corner hit. Help."] },
+  { title: "Q24", lines: ["Your feedback is mandatory.", "Complete the satisfaction survey to proceed."] },
+  { title: "Q25", lines: ["You must create a password to continue.", "All requirements are listed above."] },
+  { title: "Q26", lines: ["The light switch is somewhere in this room.", "We believe in you. Probably."] },
+  { title: "Q27", lines: ["A vote is being held for Head Examination Officer.", "Choose your candidate wisely."] },
+  { title: "Q28", lines: ["Click what you see.", "Trust nothing. Not even this sentence."] },
+  { title: "Q29", lines: ["The treasure is marked on the map above.", "It is not staying still."] },
+  { title: "Q30", lines: ["Final question.", "Take your time."] },
 ];

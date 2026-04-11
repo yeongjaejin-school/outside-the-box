@@ -16,15 +16,15 @@ export const drawLevelSelect = (gc: GameContext) => {
   ctx.font         = `bold 36px ${displayFont}`;
   ctx.fillText("LEVEL SELECT", cx, topBoxY + topBoxHeight * 0.1);
 
-  // 5-column × 4-row grid (20 levels)
-  const cols  = 5;
-  const tileW = topBoxWidth  * 0.13;
-  const tileH = topBoxHeight * 0.14;
-  const hGap  = (topBoxWidth * 0.78 - tileW * cols) / (cols - 1);
-  const vGap  = topBoxHeight * 0.04;
+  // 6-column × 5-row grid (30 levels)
+  const cols  = 6;
+  const tileW = topBoxWidth  * 0.118;
+  const tileH = topBoxHeight * 0.116;
+  const hGap  = (topBoxWidth * 0.82 - tileW * cols) / (cols - 1);
+  const vGap  = topBoxHeight * 0.028;
   const gridW = tileW * cols + hGap * (cols - 1);
   const gridX = cx - gridW / 2;
-  const gridY = topBoxY + topBoxHeight * 0.18;
+  const gridY = topBoxY + topBoxHeight * 0.17;
 
   for (let i = 0; i < LEVEL_COUNT; i++) {
     const col = i % cols;
@@ -33,22 +33,23 @@ export const drawLevelSelect = (gc: GameContext) => {
     const ty  = gridY + row * (tileH + vGap);
     const lvl = i + 1;
 
-    const isWip = lvl > 10;
+    // Levels 10-20 are stubs; 1-9 and 21-30 are fully implemented
+    const isWip = lvl >= 10 && lvl <= 20;
 
     ctx.strokeStyle  = isWip ? t.divider : t.stroke;
-    ctx.lineWidth    = isWip ? 1 : 3;
+    ctx.lineWidth    = isWip ? 1 : 2.5;
     ctx.strokeRect(tx, ty, tileW, tileH);
 
     ctx.fillStyle    = isWip ? t.fgDim : t.fg;
     ctx.textAlign    = "center";
     ctx.textBaseline = "middle";
 
-    ctx.font = `bold 20px ${displayFont}`;
-    ctx.fillText(`${lvl}`, tx + tileW / 2, ty + tileH * 0.38);
+    ctx.font = `bold 18px ${displayFont}`;
+    ctx.fillText(`${lvl}`, tx + tileW / 2, ty + tileH * 0.40);
 
-    ctx.font      = `10px ${bodyFont}`;
-    ctx.fillStyle = isWip ? t.fgDim : t.fgDim;
-    ctx.fillText(isWip ? "soon" : `LEVEL ${lvl}`, tx + tileW / 2, ty + tileH * 0.74);
+    ctx.font      = `9px ${bodyFont}`;
+    ctx.fillStyle = t.fgDim;
+    ctx.fillText(isWip ? "soon" : `Q.${lvl}`, tx + tileW / 2, ty + tileH * 0.76);
 
     const captured = lvl;
     gc.hitAreas.push({

@@ -11,6 +11,16 @@ import { drawLevel6 }     from '../levels/Level6';
 import { drawLevel7 }     from '../levels/Level7';
 import { drawLevel8 }     from '../levels/Level8';
 import { drawLevel9 }     from '../levels/Level9';
+import { drawLevel21 }    from '../levels/Level21';
+import { drawLevel22 }    from '../levels/Level22';
+import { drawLevel23 }    from '../levels/Level23';
+import { drawLevel24 }    from '../levels/Level24';
+import { drawLevel25 }    from '../levels/Level25';
+import { drawLevel26 }    from '../levels/Level26';
+import { drawLevel27 }    from '../levels/Level27';
+import { drawLevel28 }    from '../levels/Level28';
+import { drawLevel29 }    from '../levels/Level29';
+import { drawLevel30 }    from '../levels/Level30';
 import { LEVEL_COUNT }    from '../levelData';
 
 export const drawLevel = (gc: GameContext) => {
@@ -81,6 +91,17 @@ export const drawLevel = (gc: GameContext) => {
     drawLevelHUD(gc);
     return;
   }
+
+  if (lvl === 21) { drawLevel21(gc); drawLevelHUD(gc); return; }
+  if (lvl === 22) { drawLevel22(gc); drawLevelHUD(gc); return; }
+  if (lvl === 23) { drawLevel23(gc); drawLevelHUD(gc); return; }
+  if (lvl === 24) { drawLevel24(gc); drawLevelHUD(gc); return; }
+  if (lvl === 25) { drawLevel25(gc); drawLevelHUD(gc); return; }
+  if (lvl === 26) { drawLevel26(gc); drawLevelHUD(gc); return; }
+  if (lvl === 27) { drawLevel27(gc); drawLevelHUD(gc); return; }
+  if (lvl === 28) { drawLevel28(gc); drawLevelHUD(gc); return; }
+  if (lvl === 29) { drawLevel29(gc); drawLevelHUD(gc); return; }
+  if (lvl === 30) { drawLevel30(gc); drawLevelHUD(gc); return; }
 
   // Placeholder for unfinished levels
   ctx.fillStyle    = t.fg;
