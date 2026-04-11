@@ -1,7 +1,6 @@
 import { GameContext } from "../types";
 import { getTheme } from "../theme";
 import { getLayout } from "../layout";
-import { drawButton } from "../renderer";
 
 export const drawControlsOverlay = (gc: GameContext) => {
   const { ctx, state, displayFont, bodyFont } = gc;
@@ -36,6 +35,7 @@ export const drawControlsOverlay = (gc: GameContext) => {
 
   const controls = [
     { key: "W / A / S / D", desc: "Move / Navigate" },
+    { key: "H", desc: "Hold Blocks" },
     { key: "CLICK", desc: "Interact / Select answer" },
     { key: "ESC", desc: "Close this panel" },
   ];
@@ -79,23 +79,4 @@ export const drawControlsOverlay = (gc: GameContext) => {
   ctx.textBaseline = "middle";
   ctx.font = `13px ${bodyFont}`;
   ctx.fillText("Controls may vary between levels.", cx, oy + oh * 0.84);
-
-  // Clear underlying hit areas
-  gc.hitAreas = [];
-
-  const closeW = 140;
-  const closeH = 40;
-  drawButton(
-    gc,
-    "CLOSE  ✕",
-    cx - closeW / 2,
-    oy + oh * 0.9,
-    closeW,
-    closeH,
-    () => {
-      state.controlsOpen = false;
-      gc.render();
-    },
-    17,
-  );
 };
