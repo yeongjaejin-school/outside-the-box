@@ -35,22 +35,23 @@ export const drawLogo = (gc: GameContext) => {
 
 export const drawGameplayFrame = (gc: GameContext) => {
   const { ctx, state, gameplayFrame, gameplayFrameLoaded } = gc;
-  const { topBoxX, topBoxY, topBoxWidth, topBoxHeight } = getLayout(ctx);
+  const { frameX, frameY, frameW, frameH, topBoxX, topBoxY, topBoxWidth, topBoxHeight } = getLayout(ctx);
+  const t = getTheme(state);
+
   if (gameplayFrameLoaded && gameplayFrame.naturalWidth > 0) {
-    ctx.drawImage(
-      gameplayFrame,
-      440,
-      180,
-      688,
-      572,
-      topBoxX,
-      topBoxY,
-      topBoxWidth,
-      topBoxHeight,
-    );
+    // 1. Draw the stone-border PNG at the expanded frame area.
+    //    The stone border now hangs FRAME_BLEED px outside the play area.
+    ctx.drawImage(gameplayFrame, 440, 180, 688, 572, frameX, frameY, frameW, frameH);
+
+    // 2. Fill the play-area interior with the background colour.
+    //    This erases the PNG's white interior so only the stone border is visible,
+    //    and gives levels a clean background to draw on regardless of dark/light mode.
+    ctx.fillStyle = t.bg;
+    ctx.fillRect(topBoxX, topBoxY, topBoxWidth, topBoxHeight);
   } else {
-    ctx.strokeStyle = getTheme(state).stroke;
-    ctx.lineWidth = 4;
+    // Fallback: plain stroked rect
+    ctx.strokeStyle = t.stroke;
+    ctx.lineWidth   = 4;
     ctx.strokeRect(topBoxX, topBoxY, topBoxWidth, topBoxHeight);
   }
 };
@@ -81,8 +82,11 @@ export const drawButton = (
 
 export const drawBottomPanel = (gc: GameContext) => {
   const { ctx, state, displayFont, bodyFont } = gc;
-  const { contentX, contentWidth, bottomBoxY, bottomBoxHeight } = getLayout(ctx);
+  const { frameX, frameW, bottomBoxY, bottomBoxHeight } = getLayout(ctx);
   const t = getTheme(state);
+  // Align panel width with the frame PNG, not the slightly narrower contentWidth
+  const contentX    = frameX;
+  const contentWidth = frameW;
 
   // Panel border
   ctx.strokeStyle = t.stroke;
