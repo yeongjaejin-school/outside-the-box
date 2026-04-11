@@ -35,7 +35,7 @@ export const drawControlsOverlay = (gc: GameContext) => {
 
   const controls = [
     { key: "W / A / S / D", desc: "Move / Navigate" },
-    { key: "H", desc: "Hold Blocks" },
+    { key: "H", desc: "Hold / Release Blocks" },
     { key: "CLICK", desc: "Interact / Select answer" },
     { key: "ESC", desc: "Close this panel" },
   ];
@@ -78,5 +78,5 @@ export const drawControlsOverlay = (gc: GameContext) => {
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.font = `13px ${bodyFont}`;
-  ctx.fillText("Controls may vary between levels.", cx, oy + oh * 0.84);
+  ctx.fillText("Controls may vary between levels.", cx, oy + oh * 0.9);
 };
