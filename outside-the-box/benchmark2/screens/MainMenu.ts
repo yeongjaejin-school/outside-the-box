@@ -23,12 +23,14 @@ export const drawMainMenu = (gc: GameContext) => {
   const stride = btnH + 14;
 
   drawButton(gc, "START EXAM", btnX, startY, btnW, btnH, () => {
-    state.currentLevel = 1;
-    state.lives        = 3;
-    state.paused       = false;
-    state.gameOver     = false;
-    state.playMode     = "play";
-    state.currentScreen = "level";
+    state.currentLevel   = 1;
+    state.lives          = 3;
+    state.paused         = false;
+    state.gameOver       = false;
+    state.skips          = 0;
+    state.levelSubPhase  = "";
+    state.playMode       = "play";
+    state.currentScreen  = "level";
     gc.render();
   });
 

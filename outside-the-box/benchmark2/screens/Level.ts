@@ -5,6 +5,12 @@ import { drawButton, drawLevelHUD } from '../renderer';
 import { drawNameEntry }  from '../levels/Level1';
 import { drawLevel2 }     from '../levels/Level2';
 import { drawLevel3 }     from '../levels/Level3';
+import { drawLevel4 }     from '../levels/Level4';
+import { drawLevel5 }     from '../levels/Level5';
+import { drawLevel6 }     from '../levels/Level6';
+import { drawLevel7 }     from '../levels/Level7';
+import { drawLevel8 }     from '../levels/Level8';
+import { drawLevel9 }     from '../levels/Level9';
 import { LEVEL_COUNT }    from '../levelData';
 
 export const drawLevel = (gc: GameContext) => {
@@ -31,6 +37,47 @@ export const drawLevel = (gc: GameContext) => {
   // Level 3 — click the dot
   if (lvl === 3) {
     drawLevel3(gc);
+    drawLevelHUD(gc);
+    return;
+  }
+
+  // Level 4 — don't click anything
+  if (lvl === 4) {
+    drawLevel4(gc);
+    drawLevelHUD(gc);
+    return;
+  }
+
+  // Level 5 — catch me if you can
+  if (lvl === 5) {
+    drawLevel5(gc);
+    drawLevelHUD(gc);
+    return;
+  }
+
+  // Level 6 — pong
+  if (lvl === 6) {
+    drawLevel6(gc);
+    drawLevelHUD(gc);
+    return;
+  }
+
+  // Level 7 — chalkboard counting
+  if (lvl === 7) {
+    drawLevel7(gc);
+    drawLevelHUD(gc);
+    return;
+  }
+
+  // Level 8 — stranger interaction (intentionally unlabeled, no Q.X HUD)
+  if (lvl === 8) {
+    drawLevel8(gc);
+    return;
+  }
+
+  // Level 9 — calculus trick (answer is Q.9 label)
+  if (lvl === 9) {
+    drawLevel9(gc);
     drawLevelHUD(gc);
     return;
   }

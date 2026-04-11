@@ -54,11 +54,13 @@ export const drawLevelSelect = (gc: GameContext) => {
     gc.hitAreas.push({
       x: tx, y: ty, w: tileW, h: tileH,
       action: () => {
-        state.currentLevel  = captured;
-        state.playMode      = "levelselect";
-        state.gameOver      = false;
-        state.lives         = 3;
-        state.currentScreen = "level";
+        state.currentLevel    = captured;
+        state.playMode        = "levelselect";
+        state.gameOver        = false;
+        state.lives           = 3;
+        state.levelTimerEnd   = 0;
+        state.levelSubPhase   = "";
+        state.currentScreen   = "level";
         gc.render();
       },
     });

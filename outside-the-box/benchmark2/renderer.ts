@@ -3,6 +3,12 @@ import { getTheme } from "./theme";
 import { getLayout } from "./layout";
 import { LEVEL_DATA } from "./levelData";
 
+/** Whether the current level can be skipped. */
+export const isSkippable = (currentLevel: number): boolean => {
+  const entry = LEVEL_DATA[currentLevel - 1];
+  return entry ? entry.skippable !== false : true;
+};
+
 export const drawBackground = (gc: GameContext) => {
   const { ctx, state } = gc;
   const t = getTheme(state);
@@ -75,38 +81,113 @@ export const drawButton = (
 
 export const drawBottomPanel = (gc: GameContext) => {
   const { ctx, state, displayFont, bodyFont } = gc;
-  const { w, contentX, contentWidth, bottomBoxY, bottomBoxHeight } =
-    getLayout(ctx);
+  const { contentX, contentWidth, bottomBoxY, bottomBoxHeight } = getLayout(ctx);
   const t = getTheme(state);
 
+  // Panel border
   ctx.strokeStyle = t.stroke;
-  ctx.lineWidth = 4;
+  ctx.lineWidth   = 4;
   ctx.strokeRect(contentX, bottomBoxY, contentWidth, bottomBoxHeight);
 
-  const centerX = w / 2;
-  const textWidth = contentWidth * 0.74;
+  const panelCY = bottomBoxY + bottomBoxHeight / 2;
 
-  const levelData =
-    state.currentScreen === "level"
-      ? LEVEL_DATA[state.currentLevel - 1]
-      : { title: state.storyTitle, lines: state.storyLines };
+  // ── Robot avatar ──────────────────────────────────────────────────────────
+  const robotCX = contentX + contentWidth * 0.07;
+  const headW   = 50;
+  const headH   = 42;
+  const headX   = robotCX - headW / 2;
+  const headY   = panelCY - headH / 2 - 6;
 
+  // antenna stem + ball
+  ctx.strokeStyle = t.stroke;
+  ctx.lineWidth   = 2;
+  ctx.beginPath();
+  ctx.moveTo(robotCX, headY);
+  ctx.lineTo(robotCX, headY - 11);
+  ctx.stroke();
   ctx.fillStyle = t.fg;
-  ctx.textAlign = "center";
+  ctx.beginPath();
+  ctx.arc(robotCX, headY - 15, 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  // head box
+  ctx.strokeStyle = t.stroke;
+  ctx.lineWidth   = 2;
+  ctx.strokeRect(headX, headY, headW, headH);
+
+  // eyes — two lit rectangles
+  const eyeY = headY + headH * 0.28;
+  ctx.fillStyle = state.darkMode ? "#88bbff" : "#3366cc";
+  ctx.fillRect(headX + headW * 0.16, eyeY, 11, 9);
+  ctx.fillRect(headX + headW * 0.56, eyeY, 11, 9);
+
+  // mouth — row of small dim squares
+  const mouthY = headY + headH * 0.65;
+  ctx.fillStyle = t.fgDim;
+  for (let i = 0; i < 5; i++) {
+    ctx.fillRect(headX + headW * 0.13 + i * 8, mouthY, 5, 5);
+  }
+
+  // label under robot
+  ctx.fillStyle    = t.fgDim;
+  ctx.textAlign    = "center";
   ctx.textBaseline = "top";
+  ctx.font         = `bold 9px ${displayFont}`;
+  ctx.fillText("EXAM  GUIDE", robotCX, headY + headH + 7, headW + 16);
 
-  ctx.font = `bold 30px ${displayFont}`;
-  ctx.fillText(levelData.title, centerX, bottomBoxY + 18, textWidth);
+  // ── Vertical divider ──────────────────────────────────────────────────────
+  const divX = contentX + contentWidth * 0.155;
+  ctx.strokeStyle = t.divider;
+  ctx.lineWidth   = 1;
+  ctx.beginPath();
+  ctx.moveTo(divX, bottomBoxY + bottomBoxHeight * 0.10);
+  ctx.lineTo(divX, bottomBoxY + bottomBoxHeight * 0.90);
+  ctx.stroke();
 
-  ctx.font = `20px ${bodyFont}`;
-  const lineGap = 30;
-  for (let i = 0; i < levelData.lines.length; i++) {
-    ctx.fillText(
-      levelData.lines[i],
-      centerX,
-      bottomBoxY + 68 + i * lineGap,
-      textWidth,
-    );
+  // ── Speech content ────────────────────────────────────────────────────────
+  const speechX  = divX + contentWidth * 0.025;
+  const speechW  = contentX + contentWidth - speechX - contentWidth * 0.02;
+
+  const levelData = state.currentScreen === "level"
+    ? LEVEL_DATA[state.currentLevel - 1]
+    : { title: state.storyTitle, lines: state.storyLines };
+
+  // speaker tag
+  ctx.fillStyle    = t.fgDim;
+  ctx.textAlign    = "left";
+  ctx.textBaseline = "top";
+  ctx.font         = `bold 11px ${displayFont}`;
+  ctx.fillText("EXAM GUIDE  »", speechX, bottomBoxY + bottomBoxHeight * 0.10);
+
+  // ── Typewriter: build partially-revealed display lines ───────────────────
+  const fullLines  = levelData.lines;
+  const totalChars = fullLines.reduce((s, l) => s + l.length, 0);
+  const isTyping   = state.guideReveal < totalChars;
+
+  let charsLeft = Math.max(0, state.guideReveal);
+  const displayLines: string[] = [];
+  for (const line of fullLines) {
+    if (charsLeft <= 0) break;
+    const shown = Math.min(charsLeft, line.length);
+    displayLines.push(line.slice(0, shown));
+    charsLeft -= shown;
+  }
+
+  // Blinking cursor appended to last visible line
+  if (displayLines.length > 0 && (isTyping || state.guideCursor)) {
+    displayLines[displayLines.length - 1] += " |";
+  }
+
+  // speech lines
+  const lineGap = 27;
+  const totalH  = fullLines.length * lineGap;
+  const startY  = panelCY - totalH / 2 + lineGap * 0.1;
+
+  ctx.fillStyle    = t.fg;
+  ctx.textBaseline = "middle";
+  ctx.font         = `18px ${bodyFont}`;
+  for (let i = 0; i < displayLines.length; i++) {
+    ctx.fillText(displayLines[i], speechX, startY + i * lineGap, speechW);
   }
 };
 
@@ -148,19 +229,52 @@ export const drawLevelHUD = (gc: GameContext) => {
     },
   });
 
-  // Lives — bottom right
+  // Lives — position depends on whether SKIPS UI is visible
+  const skipsUnlocked = state.currentLevel >= 9;
   const heartSize = 24;
-  const heartGap = 6;
-  const livesY = topBoxY + topBoxHeight - padY;
-  const totalW = 3 * heartSize + 2 * heartGap;
-  const livesX = topBoxX + topBoxWidth - padX - totalW;
+  const heartGap  = 6;
+  const livesY    = topBoxY + topBoxHeight - (skipsUnlocked ? padY * 3.2 : padY * 1.2);
+  const totalHW   = 3 * heartSize + 2 * heartGap;
+  const livesX    = topBoxX + topBoxWidth - padX - totalHW;
 
   ctx.textBaseline = "middle";
-  ctx.font = `${heartSize}px sans-serif`;
+  ctx.font         = `${heartSize}px sans-serif`;
   for (let i = 0; i < 3; i++) {
     ctx.fillStyle =
       i < state.lives ? "#e03030" : state.darkMode ? "#444444" : "#bbbbbb";
     ctx.textAlign = "left";
     ctx.fillText("♥", livesX + i * (heartSize + heartGap), livesY);
+  }
+
+  // SKIPS counter — only shown after the stranger encounter (level 9+)
+  if (skipsUnlocked) {
+    const skipsY    = topBoxY + topBoxHeight - padY * 1.2;
+    const skipsW    = 110;
+    const skipsH    = 28;
+    const skipsX    = topBoxX + topBoxWidth - padX - skipsW;
+    const canSkip   = isSkippable(state.currentLevel) && state.skips > 0;
+    const skipLabel = `SKIP  ×${state.skips}`;
+
+    ctx.strokeStyle  = canSkip ? t.stroke : t.divider;
+    ctx.lineWidth    = 1.5;
+    ctx.strokeRect(skipsX, skipsY - skipsH / 2, skipsW, skipsH);
+    ctx.fillStyle    = canSkip ? t.fg : t.fgDim;
+    ctx.textAlign    = "center";
+    ctx.textBaseline = "middle";
+    ctx.font         = `bold 13px ${displayFont}`;
+    ctx.fillText(skipLabel, skipsX + skipsW / 2, skipsY, skipsW - 8);
+
+    if (canSkip) {
+      gc.hitAreas.push({
+        x: skipsX, y: skipsY - skipsH / 2, w: skipsW, h: skipsH,
+        action: () => {
+          state.skips--;
+          state.levelSubPhase = "";
+          state.levelTimerEnd = 0;
+          state.currentLevel++;
+          gc.render();
+        },
+      });
+    }
   }
 };

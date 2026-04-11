@@ -14,6 +14,12 @@ export interface GameState {
   nameFocused: boolean;
   playMode: "play" | "levelselect";
   gameOver: boolean;
+  levelTimerEnd: number;   // ms timestamp; 0 = no active timer
+  skips: number;
+  levelSubPhase: string;   // reusable per-level sub-state, reset to "" on level change
+  guideTarget:  string;    // joined lines — used to detect text changes
+  guideReveal:  number;    // characters revealed by the typewriter
+  guideCursor:  boolean;   // blinking cursor visibility
 }
 
 export interface HitArea {
@@ -22,6 +28,7 @@ export interface HitArea {
   w: number;
   h: number;
   action: () => void;
+  noCursor?: boolean;   // if true, hovering won't change the cursor to pointer
 }
 
 export interface GameContext {
@@ -37,4 +44,9 @@ export interface GameContext {
   gameplayFrame: HTMLImageElement;
   logoLoaded: boolean;
   gameplayFrameLoaded: boolean;
+  mouseX:       number;
+  mouseY:       number;
+  mouseDown:    boolean;
+  keysDown:     Set<string>;
+  wheelDeltaY:  number;
 }

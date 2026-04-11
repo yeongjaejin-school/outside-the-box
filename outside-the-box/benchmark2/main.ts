@@ -2,6 +2,7 @@ console.log("BENCHMARK 2 MAIN LOADED");
 
 import { GameContext, GameState } from './types';
 import { drawBackground, drawLogo, drawGameplayFrame, drawBottomPanel } from './renderer';
+import { LEVEL_DATA } from './levelData';
 import { drawMainMenu }       from './screens/MainMenu';
 import { drawLevelSelect }    from './screens/LevelSelect';
 import { drawLevel }          from './screens/Level';
@@ -34,17 +35,23 @@ window.onload = () => {
     paused:        false,
     controlsOpen:  false,
     darkMode:      true,
-    storyTitle:    "Outside-the-Box Thinking Certification",
+    storyTitle:    "Exam Briefing",
     storyLines: [
-      "Complete this assessment to earn your OtB Thinking Certificate.",
-      "Demonstrate your ability to approach problems from unconventional angles.",
-      "Candidates who pass may list this credential on their LinkedIn or résumé.",
+      "Welcome, candidate. I will be guiding you through this assessment.",
+      "Complete all questions to earn your OtB Thinking Certificate.",
+      "Unconventional thinking is not just permitted — it is required.",
     ],
     playerName:  "Box",
     nameInput:   "",
     nameFocused: false,
-    playMode:    "play",
-    gameOver:    false,
+    playMode:       "play",
+    gameOver:       false,
+    levelTimerEnd:  0,
+    skips:          0,
+    levelSubPhase:  "",
+    guideTarget:    "",
+    guideReveal:    0,
+    guideCursor:    false,
   };
 
   // ── game context ──────────────────────────────────────────────────────────────
@@ -64,12 +71,20 @@ window.onload = () => {
     gameplayFrame:       new Image(),
     logoLoaded:          false,
     gameplayFrameLoaded: false,
+    mouseX:      0,
+    mouseY:      0,
+    mouseDown:   false,
+    keysDown:    new Set<string>(),
+    wheelDeltaY: 0,
   };
 
   gc.resetPlayerName = () => {
-    gc.state.playerName  = "Box";
-    gc.state.nameInput   = "";
-    gc.state.nameFocused = false;
+    gc.state.playerName    = "Box";
+    gc.state.nameInput     = "";
+    gc.state.nameFocused   = false;
+    gc.state.levelTimerEnd = 0;
+    gc.state.skips         = 0;
+    gc.state.levelSubPhase = "";
   };
 
   gc.loseLife = () => {
@@ -81,8 +96,24 @@ window.onload = () => {
     gc.render();
   };
 
+  // Helper: resolve the current lines the guide should be speaking
+  const resolveGuideLines = (): string[] => {
+    if (gc.state.currentScreen === "level") {
+      return LEVEL_DATA[gc.state.currentLevel - 1]?.lines ?? [];
+    }
+    return gc.state.storyLines;
+  };
+
   gc.render = () => {
     gc.hitAreas = [];
+
+    // Detect guide text change → reset typewriter
+    const newTarget = resolveGuideLines().join("\n");
+    if (newTarget !== gc.state.guideTarget) {
+      gc.state.guideTarget = newTarget;
+      gc.state.guideReveal = 0;
+    }
+
     drawBackground(gc);
     drawLogo(gc);
     drawGameplayFrame(gc);
@@ -133,13 +164,38 @@ window.onload = () => {
 
   gameCanvas.addEventListener("mousemove", (e) => {
     const { x, y } = toCanvas(e);
+    gc.mouseX = x;
+    gc.mouseY = y;
     const over = gc.hitAreas.some(
-      (a) => x >= a.x && x <= a.x + a.w && y >= a.y && y <= a.y + a.h,
+      (a) => !a.noCursor && x >= a.x && x <= a.x + a.w && y >= a.y && y <= a.y + a.h,
     );
     gameCanvas.style.cursor = over ? "pointer" : "default";
+    // Re-render during drag (for eraser) and for button flee (level 5)
+    if (gc.mouseDown) gc.render();
   });
 
+  gameCanvas.addEventListener("mousedown", (e) => {
+    const { x, y } = toCanvas(e);
+    gc.mouseX    = x;
+    gc.mouseY    = y;
+    gc.mouseDown = true;
+    gc.render();
+  });
+
+  gameCanvas.addEventListener("mouseup", () => {
+    gc.mouseDown = false;
+  });
+
+  gameCanvas.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    gc.wheelDeltaY = e.deltaY;
+    gc.render();
+    gc.wheelDeltaY = 0;
+  }, { passive: false });
+
   window.addEventListener("keydown", (e) => {
+    gc.keysDown.add(e.key);
+
     // Name input typing — intercept all keys when focused
     if (gc.state.nameFocused && !gc.state.paused && !gc.state.controlsOpen) {
       if (e.key === "Escape") {
@@ -173,14 +229,33 @@ window.onload = () => {
     }
   });
 
+  window.addEventListener("keyup", (e) => {
+    gc.keysDown.delete(e.key);
+  });
+
   window.addEventListener("resize", () => {
     resizeCanvases();
     gc.render();
   });
 
+  // ── typewriter loop ───────────────────────────────────────────────────────────
+
+  setInterval(() => {
+    const totalChars = resolveGuideLines().reduce((s, l) => s + l.length, 0);
+    if (gc.state.guideReveal < totalChars) {
+      gc.state.guideReveal++;
+      gc.render();
+    }
+  }, 22);
+
   // ── cursor blink loop ─────────────────────────────────────────────────────────
 
   setInterval(() => {
+    gc.state.guideCursor = !gc.state.guideCursor;
+    const totalChars = resolveGuideLines().reduce((s, l) => s + l.length, 0);
+    // Only re-render for cursor blink once typewriter is done
+    if (gc.state.guideReveal >= totalChars) gc.render();
+    // Also handle name input cursor
     if (gc.state.nameFocused) gc.render();
   }, 530);
 
