@@ -11,11 +11,15 @@ export const getLayout = (ctx: CanvasRenderingContext2D) => {
   const topBoxX = contentX;
   const topBoxY = h * 0.18;
 
-  // Safe content area inside the decorative frame
   const topInnerWidth = topBoxWidth * 0.42;
   const topInnerHeight = topBoxHeight * 0.62;
   const topInnerX = w / 2 - topInnerWidth / 2;
   const topInnerY = topBoxY + topBoxHeight * 0.16;
+
+  const movementAreaWidth = topBoxWidth * 0.42;
+  const movementAreaHeight = topBoxHeight * 0.62;
+  const movementAreaX = topInnerX;
+  const movementAreaY = topInnerY;
 
   const gap = h * 0.04;
   const bottomBoxY = topBoxY + topBoxHeight + gap;
@@ -35,7 +39,51 @@ export const getLayout = (ctx: CanvasRenderingContext2D) => {
     topInnerY,
     topInnerWidth,
     topInnerHeight,
+    movementAreaX,
+    movementAreaY,
+    movementAreaWidth,
+    movementAreaHeight,
     bottomBoxY,
     bottomBoxHeight,
+  };
+};
+
+export const getMovementLayout = (ctx: CanvasRenderingContext2D) => {
+  const w = ctx.canvas.width;
+  const h = ctx.canvas.height;
+
+  const gameFrameX = 0;
+  const gameFrameY = 0;
+  const gameFrameWidth = w;
+  const gameFrameHeight = h * 0.7;
+
+  const bottomFrameX = 0;
+  const bottomFrameY = gameFrameHeight;
+  const bottomFrameWidth = w;
+  const bottomFrameHeight = h - gameFrameHeight;
+
+  const framePaddingX = 24;
+  const framePaddingTop = 24;
+  const framePaddingBottom = 56;
+  const movementAreaX = gameFrameX + framePaddingX;
+  const movementAreaY = gameFrameY + framePaddingTop;
+  const movementAreaWidth = gameFrameWidth - framePaddingX * 2;
+  const movementAreaHeight = gameFrameHeight - framePaddingTop - framePaddingBottom;
+
+  return {
+    w,
+    h,
+    gameFrameX,
+    gameFrameY,
+    gameFrameWidth,
+    gameFrameHeight,
+    bottomFrameX,
+    bottomFrameY,
+    bottomFrameWidth,
+    bottomFrameHeight,
+    movementAreaX,
+    movementAreaY,
+    movementAreaWidth,
+    movementAreaHeight,
   };
 };

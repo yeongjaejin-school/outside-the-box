@@ -1,6 +1,6 @@
 console.log("BENCHMARK 2 MAIN LOADED");
 
-import { GameContext, GameState } from "./types";
+import { GameContext, GameState, MovementArea } from "./types";
 import { drawBackground, drawLogo, drawGameplayFrame, drawBottomPanel } from "./renderer";
 import { drawMainMenu } from "./screens/MainMenu";
 import { drawLevelSelect } from "./screens/LevelSelect";
@@ -8,11 +8,12 @@ import { drawLevel } from "./screens/Level";
 import { drawPauseOverlay } from "./overlays/PauseOverlay";
 import { drawControlsOverlay } from "./overlays/ControlsOverlay";
 import { drawGameOverOverlay } from "./overlays/GameOverOverlay";
-import { getLayout } from "./layout";
+import { getLayout, getMovementLayout } from "./layout";
 
 import { EventEmitter } from "../Helpers/Events/EventEmitter";
 import { InputManager } from "../Helpers/InputManager";
 import { PlayerControl } from "../Helpers/PlayerControl";
+import { NormalBlock } from "../Helpers/objects/NormalBlock";
 
 window.onload = () => {
   const gameCanvas = document.getElementById("game-canvas") as HTMLCanvasElement | null;
@@ -55,6 +56,15 @@ window.onload = () => {
   const player = new PlayerControl(emitter);
   let previousLevel = state.currentLevel;
   let previousScreen = state.currentScreen;
+  let needsMovementReset = false;
+  let lastTimerTick = performance.now();
+
+  const defaultMovementArea: MovementArea = {
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+  };
 
   const gc: GameContext = {
     ctx,
@@ -63,6 +73,8 @@ window.onload = () => {
     render: () => {},
     loseLife: () => {},
     resetPlayerName: () => {},
+    submitMovementAnswer: () => {},
+    getCurrentAnswer: () => "",
     displayFont: `"Trebuchet MS", "Verdana", sans-serif`,
     bodyFont: `"Trebuchet MS", "Arial", sans-serif`,
     logo: new Image(),
@@ -70,25 +82,114 @@ window.onload = () => {
     logoLoaded: false,
     gameplayFrameLoaded: false,
     player,
+    blocks: [],
+    answerSlots: [],
+    movementArea: defaultMovementArea,
+    quizAnswer: "AB7",
+    timeLeftSeconds: 30,
   };
 
   const isMovementLevel = (level: number) => level >= 11 && level <= 20;
 
-  const syncPlayerToLayout = (resetPosition = false) => {
-    const { topInnerX, topInnerY, topInnerWidth, topInnerHeight } = getLayout(ctx);
-    const minX = topInnerX;
-    const minY = topInnerY;
-    const maxX = topInnerX + topInnerWidth - player.width;
-    const maxY = topInnerY + topInnerHeight - player.height;
+  const syncMovementArea = () => {
+    const movementLayout = getMovementLayout(ctx);
+    const slotGap = 10;
+    const slotSize = player.width;
+    const answerCount = 10;
+    const answerZoneWidth = answerCount * slotSize + (answerCount - 1) * slotGap;
+    const answerZoneX = movementLayout.gameFrameX + (movementLayout.gameFrameWidth - answerZoneWidth) / 2;
+    const answerZoneY = movementLayout.gameFrameY + 28;
+
+    gc.answerSlots = Array.from({ length: answerCount }, (_, index) => ({
+      x: answerZoneX + index * (slotSize + slotGap),
+      y: answerZoneY,
+      size: slotSize,
+      block: null,
+    }));
+
+    gc.movementArea = {
+      x: movementLayout.movementAreaX,
+      y: movementLayout.movementAreaY,
+      width: movementLayout.movementAreaWidth,
+      height: movementLayout.movementAreaHeight,
+    };
+  };
+
+  const buildMovementBlocks = () => {
+    const { x, y, width, height } = gc.movementArea;
+    const size = player.width;
+    const startX = x + width * 0.18;
+    const startY = y + height * 0.22;
+
+    return [
+      new NormalBlock(startX, startY, size, "#ffffff", "A"),
+      new NormalBlock(startX + size * 2.2, startY, size, "#ffffff", "B"),
+      new NormalBlock(startX + size * 4.4, startY, size, "#ffffff", "7"),
+      new NormalBlock(startX + size * 1.1, startY + size * 2.1, size, "#ffffff", "C"),
+      new NormalBlock(startX + size * 3.5, startY + size * 2.1, size, "#ffffff", "5"),
+    ];
+  };
+
+  gc.getCurrentAnswer = () => {
+    let answer = "";
+
+    for (const slot of gc.answerSlots) {
+      if (!slot.block) {
+        break;
+      }
+
+      answer += slot.block.value;
+    }
+
+    return answer;
+  };
+
+  gc.submitMovementAnswer = () => {
+    const currentAnswer = gc.getCurrentAnswer();
+    if (currentAnswer !== gc.quizAnswer) {
+      gc.loseLife();
+      needsMovementReset = true;
+      gc.timeLeftSeconds = 30;
+      lastTimerTick = performance.now();
+      gc.render();
+      return;
+    }
+
+    if (gc.state.currentLevel < 20) {
+      gc.state.currentLevel++;
+      needsMovementReset = true;
+      gc.timeLeftSeconds = 30;
+      lastTimerTick = performance.now();
+      gc.render();
+      return;
+    }
+
+    gc.state.currentScreen = "levelselect";
+    gc.render();
+  };
+
+  const syncMovementScene = (resetScene = false) => {
+    syncMovementArea();
+
+    const minX = gc.movementArea.x;
+    const minY = gc.movementArea.y;
+    const maxX = gc.movementArea.x + gc.movementArea.width - player.width;
+    const maxY = gc.movementArea.y + gc.movementArea.height - player.height;
 
     player.setBounds(minX, minY, maxX, maxY);
+    player.setAnswerSlots(gc.answerSlots);
 
-    if (resetPosition) {
+    if (resetScene) {
+      gc.blocks = buildMovementBlocks();
+      player.setBlocks(gc.blocks);
       player.resetPosition(
-        minX + (topInnerWidth - player.width) / 2,
-        minY + (topInnerHeight - player.height) / 2,
+        minX + player.width,
+        minY + gc.movementArea.height / 2 - player.height / 2,
       );
+      return;
     }
+
+    player.setBlocks(gc.blocks);
   };
 
   gc.resetPlayerName = () => {
@@ -103,25 +204,39 @@ window.onload = () => {
       gc.state.lives = 0;
       gc.state.gameOver = true;
     }
-    gc.render();
   };
 
   gc.render = () => {
+    const movementLevelActive = gc.state.currentScreen === "level" && isMovementLevel(gc.state.currentLevel);
     const enteringMovementLevel =
-      gc.state.currentScreen === "level" &&
-      isMovementLevel(gc.state.currentLevel) &&
-      (previousScreen !== "level" || previousLevel !== gc.state.currentLevel);
+      movementLevelActive && (previousScreen !== "level" || previousLevel !== gc.state.currentLevel);
 
-    if (enteringMovementLevel) {
-      syncPlayerToLayout(true);
-    } else if (gc.state.currentScreen === "level" && isMovementLevel(gc.state.currentLevel)) {
-      syncPlayerToLayout(false);
+    if (movementLevelActive) {
+      syncMovementScene(enteringMovementLevel || gc.blocks.length === 0 || needsMovementReset);
+      needsMovementReset = false;
+    } else {
+      gc.blocks = [];
+      gc.answerSlots = [];
+      player.setBlocks([]);
+      player.setAnswerSlots([]);
+      gc.timeLeftSeconds = 30;
+      lastTimerTick = performance.now();
+      const { movementAreaX, movementAreaY, movementAreaWidth, movementAreaHeight } = getLayout(ctx);
+      gc.movementArea = {
+        x: movementAreaX,
+        y: movementAreaY,
+        width: movementAreaWidth,
+        height: movementAreaHeight,
+      };
     }
 
     gc.hitAreas = [];
     drawBackground(gc);
-    drawLogo(gc);
-    drawGameplayFrame(gc);
+
+    if (!movementLevelActive) {
+      drawLogo(gc);
+      drawGameplayFrame(gc);
+    }
 
     switch (gc.state.currentScreen) {
       case "mainmenu":
@@ -150,7 +265,7 @@ window.onload = () => {
     const h = window.innerHeight;
     gameCanvas.width = debugCanvas.width = w;
     gameCanvas.height = debugCanvas.height = h;
-    syncPlayerToLayout(false);
+    needsMovementReset = true;
   };
 
   const toCanvas = (e: MouseEvent) => {
@@ -241,23 +356,49 @@ window.onload = () => {
     gc.logoLoaded = false;
     gc.render();
   };
+  gc.gameplayFrame.onload = () => {
+    gc.gameplayFrameLoaded = true;
+    gc.render();
+  };
+  gc.gameplayFrame.onerror = () => {
+    gc.gameplayFrameLoaded = false;
+    gc.render();
+  };
 
   gc.logo.src = "/benchmark2/assets/logo.png";
+  gc.gameplayFrame.src = "/benchmark2/assets/gameplay-frame.png";
 
   resizeCanvases();
   gc.render();
 
   const gameLoop = () => {
+    const movementLevelActive = gc.state.currentScreen === "level" && isMovementLevel(gc.state.currentLevel);
+
     if (
-      gc.state.currentScreen === "level" &&
-      isMovementLevel(gc.state.currentLevel) &&
+      movementLevelActive &&
       !gc.state.paused &&
       !gc.state.controlsOpen &&
       !gc.state.gameOver
     ) {
+      const now = performance.now();
+      if (now - lastTimerTick >= 1000) {
+        const elapsedSeconds = Math.floor((now - lastTimerTick) / 1000);
+        gc.timeLeftSeconds = Math.max(0, gc.timeLeftSeconds - elapsedSeconds);
+        lastTimerTick += elapsedSeconds * 1000;
+
+        if (gc.timeLeftSeconds === 0) {
+          gc.loseLife();
+          needsMovementReset = true;
+          gc.timeLeftSeconds = 30;
+          lastTimerTick = performance.now();
+        }
+      }
+
       input.update();
       player.update();
       gc.render();
+    } else {
+      lastTimerTick = performance.now();
     }
 
     requestAnimationFrame(gameLoop);

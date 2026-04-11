@@ -1,5 +1,5 @@
 import { EventEmitter } from "./Events/EventEmitter";
-import { GameEvent, MoveEventPayload } from "./Events/Event.ts";
+import { GameEvent } from "./Events/Event.ts";
 
 export class InputManager {
     private keys: { [key: string]: boolean } = {};
@@ -15,10 +15,21 @@ export class InputManager {
 
     private onKeyDown(event: KeyboardEvent) {
         const key = event.key.toLowerCase();
+        const wasPressed = this.keys[key] === true;
         this.keys[key] = true;
 
         if (this.movementKeys.has(key)) {
             event.preventDefault();
+        }
+
+        if (!wasPressed) {
+            if (key === " ") {
+                this.emitter.emit(GameEvent.DASH, {});
+            }
+
+            if (key === "h") {
+                this.emitter.emit(GameEvent.HOLD, {});
+            }
         }
     }
 
@@ -42,14 +53,6 @@ export class InputManager {
 
         if (dx !== 0 || dy !== 0) {
             this.emitter.emit(GameEvent.MOVE, { dx, dy });
-        }
-
-        if (this.keys[" "]) {
-            this.emitter.emit(GameEvent.DASH, {});
-        }
-
-        if (this.keys["h"]) {
-            this.emitter.emit(GameEvent.HOLD, {});
         }
     }
 }

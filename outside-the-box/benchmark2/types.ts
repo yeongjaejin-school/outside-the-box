@@ -24,6 +24,27 @@ export interface HitArea {
   action: () => void;
 }
 
+export interface BlockEntity {
+  x: number;
+  y: number;
+  size: number;
+  color: string;
+  value: string;
+  type: string;
+  held: boolean;
+  draw: (ctx: CanvasRenderingContext2D) => void;
+  collidesWithRect: (x: number, y: number, width: number, height: number) => boolean;
+  moveTo: (x: number, y: number) => void;
+  setHeld: (held: boolean) => void;
+}
+
+export interface AnswerSlotEntity {
+  x: number;
+  y: number;
+  size: number;
+  block: BlockEntity | null;
+}
+
 export interface PlayerEntity {
   x: number;
   y: number;
@@ -32,7 +53,17 @@ export interface PlayerEntity {
   update: () => void;
   draw: (ctx: CanvasRenderingContext2D) => void;
   setBounds: (minX: number, minY: number, maxX: number, maxY: number) => void;
+  setBlocks: (blocks: BlockEntity[]) => void;
+  setAnswerSlots: (slots: AnswerSlotEntity[]) => void;
   resetPosition: (x: number, y: number) => void;
+  getFacingDirection: () => "up" | "down" | "left" | "right";
+}
+
+export interface MovementArea {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
 export interface GameContext {
@@ -42,6 +73,8 @@ export interface GameContext {
   render: () => void;
   loseLife: () => void;
   resetPlayerName: () => void;
+  submitMovementAnswer: () => void;
+  getCurrentAnswer: () => string;
   displayFont: string;
   bodyFont: string;
   logo: HTMLImageElement;
@@ -49,4 +82,9 @@ export interface GameContext {
   logoLoaded: boolean;
   gameplayFrameLoaded: boolean;
   player: PlayerEntity;
+  blocks: BlockEntity[];
+  answerSlots: AnswerSlotEntity[];
+  movementArea: MovementArea;
+  quizAnswer: string;
+  timeLeftSeconds: number;
 }
