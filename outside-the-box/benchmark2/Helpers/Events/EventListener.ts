@@ -1,5 +1,3 @@
-// EventListener.ts
-
 import { EventEmitter } from "./EventEmitter";
 
 export class EventListener {

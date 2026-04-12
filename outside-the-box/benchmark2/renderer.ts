@@ -107,11 +107,11 @@ export const drawBottomPanel = (gc: GameContext) => {
     ctx.fillText(`Quiz: spell ${gc.quizAnswer} in the answer zone.`, 28, movementLayout.bottomFrameY + 62, movementLayout.bottomFrameWidth * 0.56);
 
     ctx.font = `15px ${bodyFont}`;
-    ctx.fillStyle = t.fg;
-    ctx.fillText(`Current Answer: ${currentAnswer}`, 28, movementLayout.bottomFrameY + 102, movementLayout.bottomFrameWidth * 0.52);
-
     ctx.fillStyle = timerColor;
-    ctx.fillText(`Time Left: ${timerText}`, 28, movementLayout.bottomFrameY + 130, 180);
+    ctx.fillText(`Time Left: ${timerText}`, 28, movementLayout.bottomFrameY + 102, 180);
+
+    ctx.fillStyle = t.fg;
+    ctx.fillText(`Your Answer: ${currentAnswer}`, 28, movementLayout.bottomFrameY + 130, movementLayout.bottomFrameWidth * 0.52);
 
     drawButton(gc, "SUBMIT", submitX, submitY, submitW, submitH, () => {
       gc.submitMovementAnswer();

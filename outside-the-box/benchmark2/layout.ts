@@ -52,15 +52,15 @@ export const getMovementLayout = (ctx: CanvasRenderingContext2D) => {
   const w = ctx.canvas.width;
   const h = ctx.canvas.height;
 
-  const gameFrameX = 0;
-  const gameFrameY = 0;
-  const gameFrameWidth = w;
-  const gameFrameHeight = h * 0.7;
+  const gameFrameX = w * 0.05;
+  const gameFrameY = h * 0.05;
+  const gameFrameWidth = w * 0.9;
+  const gameFrameHeight = h * 0.65;
 
   const bottomFrameX = 0;
-  const bottomFrameY = gameFrameHeight;
+  const bottomFrameY = h * 0.7;
   const bottomFrameWidth = w;
-  const bottomFrameHeight = h - gameFrameHeight;
+  const bottomFrameHeight = h * 0.3;
 
   const framePaddingX = 24;
   const framePaddingTop = 24;

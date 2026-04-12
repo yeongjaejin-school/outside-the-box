@@ -10,10 +10,10 @@ import { drawControlsOverlay } from "./overlays/ControlsOverlay";
 import { drawGameOverOverlay } from "./overlays/GameOverOverlay";
 import { getLayout, getMovementLayout } from "./layout";
 
-import { EventEmitter } from "../Helpers/Events/EventEmitter";
-import { InputManager } from "../Helpers/InputManager";
-import { PlayerControl } from "../Helpers/PlayerControl";
-import { NormalBlock } from "../Helpers/objects/NormalBlock";
+import { EventEmitter } from "./Helpers/Events/EventEmitter";
+import { InputManager } from "./Helpers/InputManager";
+import { PlayerControl } from "./Helpers/PlayerControl";
+import { NormalBlock } from "./Helpers/objects/NormalBlock";
 
 window.onload = () => {
   const gameCanvas = document.getElementById("game-canvas") as HTMLCanvasElement | null;
@@ -365,8 +365,8 @@ window.onload = () => {
     gc.render();
   };
 
-  gc.logo.src = "/benchmark2/assets/logo.png";
-  gc.gameplayFrame.src = "/benchmark2/assets/gameplay-frame.png";
+  gc.logo.src = "./assets/GameLogo.png";
+  gc.gameplayFrame.src = "./assets/gameplay-frame.png";
 
   resizeCanvases();
   gc.render();

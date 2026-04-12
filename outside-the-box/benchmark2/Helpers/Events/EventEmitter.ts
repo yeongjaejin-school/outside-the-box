@@ -1,5 +1,3 @@
-// EventEmitter.ts
-
 type EventCallback<T = any> = (payload: T) => void;
 
 export class EventEmitter {
@@ -18,7 +16,7 @@ export class EventEmitter {
 
         this.listeners.set(
             event,
-            callbacks.filter(cb => cb !== callback)
+            callbacks.filter((cb) => cb !== callback)
         );
     }
 

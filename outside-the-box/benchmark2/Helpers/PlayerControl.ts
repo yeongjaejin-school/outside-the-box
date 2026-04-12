@@ -2,7 +2,7 @@ import { EventListener } from "./Events/EventListener";
 import { EventEmitter } from "./Events/EventEmitter";
 import { GameEvent, MoveEventPayload } from "./Events/Event.ts";
 import { Block } from "./objects/Block";
-import type { AnswerSlotEntity } from "../benchmark2/types";
+import type { AnswerSlotEntity } from "../types";
 
 type Direction = "up" | "down" | "left" | "right";
 
@@ -20,6 +20,7 @@ export class PlayerControl extends EventListener {
     public readonly height = 48;
 
     private readonly speed = 5;
+    private readonly dashDistance = 56;
     private direction: Direction = "down";
     private readonly sprites: Record<Direction, HTMLImageElement>;
     private bounds: Bounds = {
@@ -36,10 +37,10 @@ export class PlayerControl extends EventListener {
         super(emitter);
 
         this.sprites = {
-            up: this.loadSprite("/benchmark2/assets/player/Player_Up.png"),
-            down: this.loadSprite("/benchmark2/assets/player/Player_Down.png"),
-            left: this.loadSprite("/benchmark2/assets/player/Player_Left.png"),
-            right: this.loadSprite("/benchmark2/assets/player/Player_Right.png"),
+            up: this.loadSprite("./assets/Player/Player_Up.png"),
+            down: this.loadSprite("./assets/Player/Player_Down.png"),
+            left: this.loadSprite("./assets/Player/Player_Left.png"),
+            right: this.loadSprite("./assets/Player/Player_Right.png"),
         };
 
         this.x = 400;
@@ -47,6 +48,10 @@ export class PlayerControl extends EventListener {
 
         this.listen<MoveEventPayload>(GameEvent.MOVE, (data) => {
             this.move(data);
+        });
+
+        this.listen(GameEvent.DASH, () => {
+            this.dash();
         });
 
         this.listen(GameEvent.HOLD, () => {
@@ -71,11 +76,6 @@ export class PlayerControl extends EventListener {
     public setBounds(minX: number, minY: number, maxX: number, maxY: number) {
         this.bounds = { minX, minY, maxX, maxY };
         this.clampToBounds();
-
-        if (this.heldBlock) {
-            const heldPosition = this.getHeldBlockPosition(this.x, this.y, this.direction);
-            this.heldBlock.moveTo(heldPosition.x, heldPosition.y);
-        }
     }
 
     public setBlocks(blocks: Block[]) {
@@ -124,21 +124,36 @@ export class PlayerControl extends EventListener {
         }
 
         if (this.heldBlock) {
-            const heldPosition = this.getHeldBlockPosition(candidateX, candidateY, nextDirection);
-
-            if (!this.rectFitsBounds(heldPosition.x, heldPosition.y, this.width, this.height)) {
-                return;
-            }
-
-            if (this.collidesWithAnyBlock(heldPosition.x, heldPosition.y, otherBlocks)) {
-                return;
-            }
-
             this.clearAnswerSlotForBlock(this.heldBlock);
-            this.x = candidateX;
-            this.y = candidateY;
+            const heldPosition = this.getHeldBlockPosition(candidateX, candidateY, nextDirection);
             this.heldBlock.moveTo(heldPosition.x, heldPosition.y);
+        }
+
+        this.x = candidateX;
+        this.y = candidateY;
+    }
+
+    private dash() {
+        let dx = 0;
+        let dy = 0;
+
+        if (this.direction === "up") dy = -1;
+        if (this.direction === "down") dy = 1;
+        if (this.direction === "left") dx = -1;
+        if (this.direction === "right") dx = 1;
+
+        const candidateX = this.clampValue(this.x + dx * this.dashDistance, this.bounds.minX, this.bounds.maxX);
+        const candidateY = this.clampValue(this.y + dy * this.dashDistance, this.bounds.minY, this.bounds.maxY);
+        const otherBlocks = this.blocks.filter((block) => block !== this.heldBlock);
+
+        if (this.collidesWithAnyBlock(candidateX, candidateY, otherBlocks)) {
             return;
+        }
+
+        if (this.heldBlock) {
+            this.clearAnswerSlotForBlock(this.heldBlock);
+            const heldPosition = this.getHeldBlockPosition(candidateX, candidateY, this.direction);
+            this.heldBlock.moveTo(heldPosition.x, heldPosition.y);
         }
 
         this.x = candidateX;
@@ -175,20 +190,10 @@ export class PlayerControl extends EventListener {
             return;
         }
 
-        const heldPosition = this.getHeldBlockPosition(this.x, this.y, this.direction);
-        const otherBlocks = this.blocks.filter((candidate) => candidate !== block);
-
-        if (!this.rectFitsBounds(heldPosition.x, heldPosition.y, this.width, this.height)) {
-            return;
-        }
-
-        if (this.collidesWithAnyBlock(heldPosition.x, heldPosition.y, otherBlocks)) {
-            return;
-        }
-
         this.clearAnswerSlotForBlock(block);
         this.heldBlock = block;
         block.setHeld(true);
+        const heldPosition = this.getHeldBlockPosition(this.x, this.y, this.direction);
         block.moveTo(heldPosition.x, heldPosition.y);
     }
 
@@ -249,6 +254,13 @@ export class PlayerControl extends EventListener {
         return closestBlock;
     }
 
+    private resolveDirection(data: MoveEventPayload): Direction {
+        if (data.dx > 0) return "right";
+        if (data.dx < 0) return "left";
+        if (data.dy > 0) return "down";
+        return "up";
+    }
+
     private getHeldBlockPosition(playerX: number, playerY: number, direction: Direction) {
         switch (direction) {
             case "up":
@@ -260,13 +272,6 @@ export class PlayerControl extends EventListener {
             case "right":
                 return { x: playerX + this.width, y: playerY };
         }
-    }
-
-    private resolveDirection(data: MoveEventPayload): Direction {
-        if (data.dx > 0) return "right";
-        if (data.dx < 0) return "left";
-        if (data.dy > 0) return "down";
-        return "up";
     }
 
     private getIntersectingEmptyAnswerSlot(block: Block) {
