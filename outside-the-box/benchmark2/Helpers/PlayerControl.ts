@@ -13,6 +13,12 @@ type Bounds = {
     maxY: number;
 };
 
+type Afterimage = {
+    x: number;
+    y: number;
+    alpha: number;
+};
+
 export class PlayerControl extends EventListener {
     public x = 0;
     public y = 0;
@@ -32,6 +38,7 @@ export class PlayerControl extends EventListener {
     private blocks: Block[] = [];
     private answerSlots: AnswerSlotEntity[] = [];
     private heldBlock: Block | null = null;
+    private afterimages: Afterimage[] = [];
 
     constructor(emitter: EventEmitter) {
         super(emitter);
@@ -59,14 +66,37 @@ export class PlayerControl extends EventListener {
         });
     }
 
-    public update() {}
+    public update() {
+        if (this.heldBlock?.destroyed) {
+            this.detachHeldBlock();
+        }
+
+        this.afterimages = this.afterimages
+            .map((image) => ({ ...image, alpha: image.alpha - 0.12 }))
+            .filter((image) => image.alpha > 0);
+    }
 
     public draw(ctx: CanvasRenderingContext2D) {
         const sprite = this.sprites[this.direction];
 
         if (sprite.complete && sprite.naturalWidth > 0) {
+            for (const image of this.afterimages) {
+                ctx.save();
+                ctx.globalAlpha = image.alpha;
+                ctx.drawImage(sprite, image.x, image.y, this.width, this.height);
+                ctx.restore();
+            }
+
             ctx.drawImage(sprite, this.x, this.y, this.width, this.height);
             return;
+        }
+
+        for (const image of this.afterimages) {
+            ctx.save();
+            ctx.globalAlpha = image.alpha;
+            ctx.fillStyle = "#f28b82";
+            ctx.fillRect(image.x, image.y, this.width, this.height);
+            ctx.restore();
         }
 
         ctx.fillStyle = "#e53935";
@@ -98,6 +128,7 @@ export class PlayerControl extends EventListener {
         this.x = x;
         this.y = y;
         this.direction = direction;
+        this.afterimages = [];
         this.clampToBounds();
     }
 
@@ -114,12 +145,14 @@ export class PlayerControl extends EventListener {
     private move(data: MoveEventPayload) {
         const nextDirection = this.resolveDirection(data);
         this.direction = nextDirection;
+        const speedMultiplier = this.heldBlock?.getMoveSpeedMultiplier() ?? 1;
+        const moveSpeed = this.speed * speedMultiplier;
 
-        const candidateX = this.clampValue(this.x + data.dx * this.speed, this.bounds.minX, this.bounds.maxX);
-        const candidateY = this.clampValue(this.y + data.dy * this.speed, this.bounds.minY, this.bounds.maxY);
+        const candidateX = this.clampValue(this.x + data.dx * moveSpeed, this.bounds.minX, this.bounds.maxX);
+        const candidateY = this.clampValue(this.y + data.dy * moveSpeed, this.bounds.minY, this.bounds.maxY);
         const otherBlocks = this.blocks.filter((block) => block !== this.heldBlock);
 
-        if (this.collidesWithAnyBlock(candidateX, candidateY, otherBlocks)) {
+        if (this.collidesWithBlockingBlock(candidateX, candidateY, otherBlocks)) {
             return;
         }
 
@@ -141,12 +174,16 @@ export class PlayerControl extends EventListener {
         if (this.direction === "down") dy = 1;
         if (this.direction === "left") dx = -1;
         if (this.direction === "right") dx = 1;
+        const speedMultiplier = this.heldBlock?.getMoveSpeedMultiplier() ?? 1;
+        const dashDistance = this.dashDistance * speedMultiplier;
 
-        const candidateX = this.clampValue(this.x + dx * this.dashDistance, this.bounds.minX, this.bounds.maxX);
-        const candidateY = this.clampValue(this.y + dy * this.dashDistance, this.bounds.minY, this.bounds.maxY);
+        const startX = this.x;
+        const startY = this.y;
+        const candidateX = this.clampValue(this.x + dx * dashDistance, this.bounds.minX, this.bounds.maxX);
+        const candidateY = this.clampValue(this.y + dy * dashDistance, this.bounds.minY, this.bounds.maxY);
         const otherBlocks = this.blocks.filter((block) => block !== this.heldBlock);
 
-        if (this.collidesWithAnyBlock(candidateX, candidateY, otherBlocks)) {
+        if (this.collidesWithBlockingBlock(candidateX, candidateY, otherBlocks)) {
             return;
         }
 
@@ -156,6 +193,7 @@ export class PlayerControl extends EventListener {
             this.heldBlock.moveTo(heldPosition.x, heldPosition.y);
         }
 
+        this.spawnDashAfterimages(startX, startY, dx, dy);
         this.x = candidateX;
         this.y = candidateY;
     }
@@ -169,6 +207,7 @@ export class PlayerControl extends EventListener {
                 this.clearAnswerSlotForBlock(this.heldBlock);
                 releaseSlot.block = this.heldBlock;
                 this.heldBlock.moveTo(releaseSlot.x, releaseSlot.y);
+                this.heldBlock.onReleased();
                 this.detachHeldBlock();
                 return;
             }
@@ -181,16 +220,20 @@ export class PlayerControl extends EventListener {
                 return;
             }
 
+            this.heldBlock.onReleased();
             this.detachHeldBlock();
             return;
         }
 
         const block = this.findNearbyFacingBlock();
-        if (!block) {
+        if (!block || !block.canBePickedUp()) {
             return;
         }
 
         this.clearAnswerSlotForBlock(block);
+        if (!block.onPickedUp()) {
+            return;
+        }
         this.heldBlock = block;
         block.setHeld(true);
         const heldPosition = this.getHeldBlockPosition(this.x, this.y, this.direction);
@@ -207,6 +250,10 @@ export class PlayerControl extends EventListener {
 
         for (const block of this.blocks) {
             if (block.held) {
+                continue;
+            }
+
+            if (block.destroyed) {
                 continue;
             }
 
@@ -301,6 +348,10 @@ export class PlayerControl extends EventListener {
         }
     }
 
+    private isBlockInAnswerZone(block: Block) {
+        return this.answerSlots.some((slot) => slot.block === block);
+    }
+
     private detachHeldBlock() {
         if (!this.heldBlock) {
             return;
@@ -308,6 +359,16 @@ export class PlayerControl extends EventListener {
 
         this.heldBlock.setHeld(false);
         this.heldBlock = null;
+    }
+
+    private collidesWithBlockingBlock(x: number, y: number, blocks: Block[]) {
+        return blocks.some((block) => {
+            if (this.isBlockInAnswerZone(block)) {
+                return false;
+            }
+
+            return block.collidesWithRect(x, y, this.width, this.height);
+        });
     }
 
     private collidesWithAnyBlock(x: number, y: number, blocks: Block[]) {
@@ -321,6 +382,18 @@ export class PlayerControl extends EventListener {
             x + width <= this.bounds.maxX + width &&
             y + height <= this.bounds.maxY + height
         );
+    }
+
+    private spawnDashAfterimages(startX: number, startY: number, dx: number, dy: number) {
+        const count = 3;
+
+        for (let i = 1; i <= count; i++) {
+            this.afterimages.push({
+                x: startX - dx * i * 18,
+                y: startY - dy * i * 18,
+                alpha: 0.42 - i * 0.08,
+            });
+        }
     }
 
     private clampToBounds() {

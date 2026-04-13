@@ -28,14 +28,20 @@ export interface BlockEntity {
   x: number;
   y: number;
   size: number;
-  color: string;
   value: string;
   type: string;
   held: boolean;
+  destroyed: boolean;
   draw: (ctx: CanvasRenderingContext2D) => void;
   collidesWithRect: (x: number, y: number, width: number, height: number) => boolean;
   moveTo: (x: number, y: number) => void;
   setHeld: (held: boolean) => void;
+  destroy: () => void;
+  update: (deltaSeconds: number, blocks: BlockEntity[]) => void;
+  canBePickedUp: () => boolean;
+  onPickedUp: () => boolean;
+  onReleased: () => void;
+  getMoveSpeedMultiplier: () => number;
 }
 
 export interface AnswerSlotEntity {
@@ -73,6 +79,7 @@ export interface GameContext {
   render: () => void;
   loseLife: () => void;
   resetPlayerName: () => void;
+  resetMovementLevel: () => void;
   submitMovementAnswer: () => void;
   getCurrentAnswer: () => string;
   displayFont: string;
@@ -85,6 +92,7 @@ export interface GameContext {
   blocks: BlockEntity[];
   answerSlots: AnswerSlotEntity[];
   movementArea: MovementArea;
+  quizPrompt: string;
   quizAnswer: string;
   timeLeftSeconds: number;
 }

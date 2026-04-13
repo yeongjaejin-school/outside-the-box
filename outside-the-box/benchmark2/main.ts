@@ -14,6 +14,12 @@ import { EventEmitter } from "./Helpers/Events/EventEmitter";
 import { InputManager } from "./Helpers/InputManager";
 import { PlayerControl } from "./Helpers/PlayerControl";
 import { NormalBlock } from "./Helpers/objects/NormalBlock";
+import { InvisibleBlock } from "./Helpers/objects/InvisibleBlock";
+import { CountdownNumberBlock } from "./Helpers/objects/CountdownNumberBlock";
+import { HeavyBlock } from "./Helpers/objects/HeavyBlock";
+import { GlassBlock } from "./Helpers/objects/GlassBlock";
+import { Block } from "./Helpers/objects/Block";
+import { MOVEMENT_LEVEL_CONFIG } from "./movementLevelConfig";
 
 window.onload = () => {
   const gameCanvas = document.getElementById("game-canvas") as HTMLCanvasElement | null;
@@ -58,6 +64,7 @@ window.onload = () => {
   let previousScreen = state.currentScreen;
   let needsMovementReset = false;
   let lastTimerTick = performance.now();
+  let lastFrameTick = performance.now();
 
   const defaultMovementArea: MovementArea = {
     x: 0,
@@ -73,6 +80,7 @@ window.onload = () => {
     render: () => {},
     loseLife: () => {},
     resetPlayerName: () => {},
+    resetMovementLevel: () => {},
     submitMovementAnswer: () => {},
     getCurrentAnswer: () => "",
     displayFont: `"Trebuchet MS", "Verdana", sans-serif`,
@@ -85,13 +93,14 @@ window.onload = () => {
     blocks: [],
     answerSlots: [],
     movementArea: defaultMovementArea,
+    quizPrompt: "Spell AB7 in the answer zone.",
     quizAnswer: "AB7",
-    timeLeftSeconds: 30,
+    timeLeftSeconds: MOVEMENT_LEVEL_CONFIG[11].time,
   };
 
   const isMovementLevel = (level: number) => level >= 11 && level <= 20;
 
-  const syncMovementArea = () => {
+  const syncMovementArea = (resetSlots = false) => {
     const movementLayout = getMovementLayout(ctx);
     const slotGap = 10;
     const slotSize = player.width;
@@ -99,12 +108,13 @@ window.onload = () => {
     const answerZoneWidth = answerCount * slotSize + (answerCount - 1) * slotGap;
     const answerZoneX = movementLayout.gameFrameX + (movementLayout.gameFrameWidth - answerZoneWidth) / 2;
     const answerZoneY = movementLayout.gameFrameY + 28;
+    const previousSlots = gc.answerSlots;
 
     gc.answerSlots = Array.from({ length: answerCount }, (_, index) => ({
       x: answerZoneX + index * (slotSize + slotGap),
       y: answerZoneY,
       size: slotSize,
-      block: null,
+      block: resetSlots ? null : previousSlots[index]?.block ?? null,
     }));
 
     gc.movementArea = {
@@ -116,18 +126,27 @@ window.onload = () => {
   };
 
   const buildMovementBlocks = () => {
+    const config = MOVEMENT_LEVEL_CONFIG[gc.state.currentLevel] ?? MOVEMENT_LEVEL_CONFIG[11];
     const { x, y, width, height } = gc.movementArea;
     const size = player.width;
-    const startX = x + width * 0.18;
-    const startY = y + height * 0.22;
+    return config.blocks.map((block): Block => {
+      const blockX = x + width * block.x;
+      const blockY = y + height * block.y;
 
-    return [
-      new NormalBlock(startX, startY, size, "#ffffff", "A"),
-      new NormalBlock(startX + size * 2.2, startY, size, "#ffffff", "B"),
-      new NormalBlock(startX + size * 4.4, startY, size, "#ffffff", "7"),
-      new NormalBlock(startX + size * 1.1, startY + size * 2.1, size, "#ffffff", "C"),
-      new NormalBlock(startX + size * 3.5, startY + size * 2.1, size, "#ffffff", "5"),
-    ];
+      switch (block.type) {
+        case "invisible":
+          return new InvisibleBlock(blockX, blockY, size, block.value);
+        case "countdown":
+          return new CountdownNumberBlock(blockX, blockY, size, block.value);
+        case "heavy":
+          return new HeavyBlock(blockX, blockY, size, block.value);
+        case "glass":
+          return new GlassBlock(blockX, blockY, size, block.value);
+        case "normal":
+        default:
+          return new NormalBlock(blockX, blockY, size, block.value);
+      }
+    });
   };
 
   gc.getCurrentAnswer = () => {
@@ -146,11 +165,13 @@ window.onload = () => {
 
   gc.submitMovementAnswer = () => {
     const currentAnswer = gc.getCurrentAnswer();
+    const config = MOVEMENT_LEVEL_CONFIG[gc.state.currentLevel] ?? MOVEMENT_LEVEL_CONFIG[11];
     if (currentAnswer !== gc.quizAnswer) {
       gc.loseLife();
       needsMovementReset = true;
-      gc.timeLeftSeconds = 30;
+      gc.timeLeftSeconds = config.time;
       lastTimerTick = performance.now();
+      lastFrameTick = performance.now();
       gc.render();
       return;
     }
@@ -158,8 +179,10 @@ window.onload = () => {
     if (gc.state.currentLevel < 20) {
       gc.state.currentLevel++;
       needsMovementReset = true;
-      gc.timeLeftSeconds = 30;
+      const nextConfig = MOVEMENT_LEVEL_CONFIG[gc.state.currentLevel] ?? MOVEMENT_LEVEL_CONFIG[11];
+      gc.timeLeftSeconds = nextConfig.time;
       lastTimerTick = performance.now();
+      lastFrameTick = performance.now();
       gc.render();
       return;
     }
@@ -168,8 +191,20 @@ window.onload = () => {
     gc.render();
   };
 
+  gc.resetMovementLevel = () => {
+    if (!isMovementLevel(gc.state.currentLevel)) {
+      return;
+    }
+
+    needsMovementReset = true;
+    gc.render();
+  };
+
   const syncMovementScene = (resetScene = false) => {
-    syncMovementArea();
+    const config = MOVEMENT_LEVEL_CONFIG[gc.state.currentLevel] ?? MOVEMENT_LEVEL_CONFIG[11];
+    gc.quizPrompt = config.prompt;
+    gc.quizAnswer = config.answer;
+    syncMovementArea(resetScene);
 
     const minX = gc.movementArea.x;
     const minY = gc.movementArea.y;
@@ -212,6 +247,12 @@ window.onload = () => {
       movementLevelActive && (previousScreen !== "level" || previousLevel !== gc.state.currentLevel);
 
     if (movementLevelActive) {
+      if (enteringMovementLevel) {
+        const config = MOVEMENT_LEVEL_CONFIG[gc.state.currentLevel] ?? MOVEMENT_LEVEL_CONFIG[11];
+        gc.timeLeftSeconds = config.time;
+        lastTimerTick = performance.now();
+        lastFrameTick = performance.now();
+      }
       syncMovementScene(enteringMovementLevel || gc.blocks.length === 0 || needsMovementReset);
       needsMovementReset = false;
     } else {
@@ -219,8 +260,9 @@ window.onload = () => {
       gc.answerSlots = [];
       player.setBlocks([]);
       player.setAnswerSlots([]);
-      gc.timeLeftSeconds = 30;
+      gc.timeLeftSeconds = MOVEMENT_LEVEL_CONFIG[11].time;
       lastTimerTick = performance.now();
+      lastFrameTick = performance.now();
       const { movementAreaX, movementAreaY, movementAreaWidth, movementAreaHeight } = getLayout(ctx);
       gc.movementArea = {
         x: movementAreaX,
@@ -369,6 +411,7 @@ window.onload = () => {
   gc.gameplayFrame.src = "./assets/gameplay-frame.png";
 
   resizeCanvases();
+  gc.timeLeftSeconds = MOVEMENT_LEVEL_CONFIG[11].time;
   gc.render();
 
   const gameLoop = () => {
@@ -381,6 +424,8 @@ window.onload = () => {
       !gc.state.gameOver
     ) {
       const now = performance.now();
+      const deltaSeconds = Math.max(0, (now - lastFrameTick) / 1000);
+      lastFrameTick = now;
       if (now - lastTimerTick >= 1000) {
         const elapsedSeconds = Math.floor((now - lastTimerTick) / 1000);
         gc.timeLeftSeconds = Math.max(0, gc.timeLeftSeconds - elapsedSeconds);
@@ -389,16 +434,30 @@ window.onload = () => {
         if (gc.timeLeftSeconds === 0) {
           gc.loseLife();
           needsMovementReset = true;
-          gc.timeLeftSeconds = 30;
+          const config = MOVEMENT_LEVEL_CONFIG[gc.state.currentLevel] ?? MOVEMENT_LEVEL_CONFIG[11];
+          gc.timeLeftSeconds = config.time;
           lastTimerTick = performance.now();
+          lastFrameTick = performance.now();
         }
       }
 
+      for (const block of gc.blocks) {
+        block.update(deltaSeconds, gc.blocks);
+      }
+
+      gc.blocks = gc.blocks.filter((block) => !block.destroyed);
+      gc.answerSlots = gc.answerSlots.map((slot) => ({
+        ...slot,
+        block: slot.block && !slot.block.destroyed ? slot.block : null,
+      }));
+      player.setBlocks(gc.blocks);
+      player.setAnswerSlots(gc.answerSlots);
       input.update();
       player.update();
       gc.render();
     } else {
       lastTimerTick = performance.now();
+      lastFrameTick = performance.now();
     }
 
     requestAnimationFrame(gameLoop);

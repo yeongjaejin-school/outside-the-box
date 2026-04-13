@@ -86,6 +86,10 @@ export const drawBottomPanel = (gc: GameContext) => {
     const submitH = 48;
     const submitX = movementLayout.bottomFrameWidth - submitW - 32;
     const submitY = movementLayout.bottomFrameY + movementLayout.bottomFrameHeight / 2 - submitH / 2;
+    const resetW = 100;
+    const resetH = 34;
+    const resetX = movementLayout.bottomFrameWidth - resetW - 46;
+    const resetY = movementLayout.bottomFrameY + 28;
 
     ctx.strokeStyle = t.stroke;
     ctx.lineWidth = 4;
@@ -104,7 +108,7 @@ export const drawBottomPanel = (gc: GameContext) => {
 
     ctx.font = `17px ${bodyFont}`;
     ctx.fillStyle = t.fgMid;
-    ctx.fillText(`Quiz: spell ${gc.quizAnswer} in the answer zone.`, 28, movementLayout.bottomFrameY + 62, movementLayout.bottomFrameWidth * 0.56);
+    ctx.fillText(`Quiz: ${gc.quizPrompt}`, 28, movementLayout.bottomFrameY + 62, movementLayout.bottomFrameWidth * 0.56);
 
     ctx.font = `15px ${bodyFont}`;
     ctx.fillStyle = timerColor;
@@ -112,6 +116,10 @@ export const drawBottomPanel = (gc: GameContext) => {
 
     ctx.fillStyle = t.fg;
     ctx.fillText(`Your Answer: ${currentAnswer}`, 28, movementLayout.bottomFrameY + 130, movementLayout.bottomFrameWidth * 0.52);
+
+    drawButton(gc, "RESET", resetX, resetY, resetW, resetH, () => {
+      gc.resetMovementLevel();
+    }, 14);
 
     drawButton(gc, "SUBMIT", submitX, submitY, submitW, submitH, () => {
       gc.submitMovementAnswer();
