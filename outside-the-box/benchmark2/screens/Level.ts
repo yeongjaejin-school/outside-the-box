@@ -100,6 +100,12 @@ export const drawLevel = (gc: GameContext) => {
     return;
   }
 
+  // Levels 11–20 — movement levels (rendered by upstream movement system)
+  if (lvl >= 11 && lvl <= 20) {
+    drawLevelHUD(gc);
+    return;
+  }
+
   if (lvl === 21) { drawLevel21(gc); drawLevelHUD(gc); return; }
   if (lvl === 22) { drawLevel22(gc); drawLevelHUD(gc); return; }
   if (lvl === 23) { drawLevel23(gc); drawLevelHUD(gc); return; }
