@@ -135,6 +135,112 @@ export const drawLevel = (gc: GameContext) => {
     return;
   }
 
+  if (lvl >= 11 && lvl <= 20 && !state.movementIntroSeen) {
+    // ── Movement intro popup ────────────────────────────────────────────────
+    const px = topBoxX + topBoxWidth * 0.04;
+    const py = topBoxY + topBoxHeight * 0.05;
+    const pw = topBoxWidth * 0.92;
+    const ph = topBoxHeight * 0.90;
+
+    // Backdrop
+    ctx.fillStyle = state.darkMode ? "rgba(10,20,10,0.96)" : "rgba(240,240,230,0.97)";
+    ctx.fillRect(px, py, pw, ph);
+    ctx.strokeStyle = t.stroke;
+    ctx.lineWidth = 3;
+    ctx.strokeRect(px, py, pw, ph);
+
+    // ── Robot avatar ────────────────────────────────────────────────────────
+    const robotCX = px + pw * 0.12;
+    const robotCY = py + ph * 0.22;
+    const headW = 48; const headH = 40;
+    const headX = robotCX - headW / 2;
+    const headY = robotCY - headH / 2;
+
+    ctx.strokeStyle = t.stroke; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(robotCX, headY); ctx.lineTo(robotCX, headY - 10); ctx.stroke();
+    ctx.fillStyle = t.fg;
+    ctx.beginPath(); ctx.arc(robotCX, headY - 14, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = t.stroke; ctx.lineWidth = 2;
+    ctx.strokeRect(headX, headY, headW, headH);
+    const eyeY = headY + headH * 0.28;
+    ctx.fillStyle = state.darkMode ? "#88bbff" : "#3366cc";
+    ctx.fillRect(headX + headW * 0.16, eyeY, 10, 8);
+    ctx.fillRect(headX + headW * 0.56, eyeY, 10, 8);
+    const mouthY = headY + headH * 0.65;
+    ctx.fillStyle = t.fgDim;
+    for (let i = 0; i < 5; i++) ctx.fillRect(headX + headW * 0.13 + i * 8, mouthY, 5, 4);
+    ctx.fillStyle = t.fgDim; ctx.font = `bold 8px ${displayFont}`;
+    ctx.textAlign = "center"; ctx.textBaseline = "top";
+    ctx.fillText("EXAM  GUIDE", robotCX, headY + headH + 5);
+
+    // ── Guide speech ────────────────────────────────────────────────────────
+    const speechX = px + pw * 0.22;
+    const speechW = pw * 0.74;
+    ctx.fillStyle = t.fg;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    ctx.font = `bold 13px ${displayFont}`;
+    ctx.fillStyle = t.fgDim;
+    ctx.fillText("EXAM GUIDE  »", speechX, py + ph * 0.08);
+
+    const guideLines = [
+      "It is now time to check your problem solving skills",
+      "when you know its someones life at stake....  so im going in!!!",
+      "Im coming out of my robotic shell for this — dont mind the new look.",
+    ];
+    ctx.fillStyle = t.fg;
+    ctx.font = `16px ${bodyFont}`;
+    guideLines.forEach((line, i) => {
+      ctx.fillText(line, speechX, py + ph * 0.14 + i * 24, speechW);
+    });
+
+    // ── Divider ─────────────────────────────────────────────────────────────
+    const divY = py + ph * 0.36;
+    ctx.strokeStyle = t.divider;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(px + pw * 0.05, divY);
+    ctx.lineTo(px + pw * 0.95, divY);
+    ctx.stroke();
+
+    // ── Controls blurb ──────────────────────────────────────────────────────
+    ctx.fillStyle = t.fg;
+    ctx.font = `bold 15px ${displayFont}`;
+    ctx.textAlign = "left";
+    ctx.fillText("LEVELS 11–20 — MOVEMENT CHALLENGE", px + pw * 0.05, divY + 14);
+
+    const controlLines = [
+      "WASD — move your character",
+      "SPACE — dash in the direction you're facing",
+      "H — pick up / release a block (must be facing it)",
+      "",
+      "Carry blocks into the answer zone at the top and spell the correct answer,",
+      "then hit SUBMIT. Watch out for special block types:",
+      "",
+      "  Heavy — slows you to 25% speed while held",
+      "  Glass — breaks if you drop and try to pick it up again",
+      "  Invisible — hidden until you pick it up",
+      "  Countdown — counts down while held, explodes at 0",
+    ];
+
+    ctx.font = `13px ${bodyFont}`;
+    ctx.fillStyle = t.fgMid;
+    controlLines.forEach((line, i) => {
+      ctx.fillText(line, px + pw * 0.05, divY + 38 + i * 20, pw * 0.9);
+    });
+
+    // ── Let's go button ─────────────────────────────────────────────────────
+    const btnW = 180; const btnH = 44;
+    const btnX = px + (pw - btnW) / 2;
+    const btnY = py + ph - btnH - 18;
+    drawButton(gc, "LET'S GO!", btnX, btnY, btnW, btnH, () => {
+      state.movementIntroSeen = true;
+      gc.render();
+    }, 18);
+
+    return;
+  }
+
   if (lvl >= 11 && lvl <= 20) {
     const movementLayout = getMovementLayout(ctx);
 
@@ -156,6 +262,73 @@ export const drawLevel = (gc: GameContext) => {
     gc.player.draw(ctx);
     drawMovementLevelNavigation(gc);
     drawLevelHUD(gc);
+    return;
+  }
+
+  if (lvl === 21 && !state.level21IntroSeen) {
+    // ── Level 21 return popup ───────────────────────────────────────────────
+    const px = topBoxX + topBoxWidth * 0.04;
+    const py = topBoxY + topBoxHeight * 0.05;
+    const pw = topBoxWidth * 0.92;
+    const ph = topBoxHeight * 0.90;
+
+    ctx.fillStyle = state.darkMode ? "rgba(10,20,10,0.96)" : "rgba(240,240,230,0.97)";
+    ctx.fillRect(px, py, pw, ph);
+    ctx.strokeStyle = t.stroke;
+    ctx.lineWidth = 3;
+    ctx.strokeRect(px, py, pw, ph);
+
+    // Robot avatar
+    const robotCX = px + pw * 0.12;
+    const robotCY = py + ph * 0.28;
+    const headW = 48; const headH = 40;
+    const headX = robotCX - headW / 2;
+    const headY = robotCY - headH / 2;
+
+    ctx.strokeStyle = t.stroke; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(robotCX, headY); ctx.lineTo(robotCX, headY - 10); ctx.stroke();
+    ctx.fillStyle = t.fg;
+    ctx.beginPath(); ctx.arc(robotCX, headY - 14, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = t.stroke; ctx.lineWidth = 2;
+    ctx.strokeRect(headX, headY, headW, headH);
+    const eyeY21 = headY + headH * 0.28;
+    ctx.fillStyle = state.darkMode ? "#88bbff" : "#3366cc";
+    ctx.fillRect(headX + headW * 0.16, eyeY21, 10, 8);
+    ctx.fillRect(headX + headW * 0.56, eyeY21, 10, 8);
+    const mouthY21 = headY + headH * 0.65;
+    ctx.fillStyle = t.fgDim;
+    for (let i = 0; i < 5; i++) ctx.fillRect(headX + headW * 0.13 + i * 8, mouthY21, 5, 4);
+    ctx.fillStyle = t.fgDim; ctx.font = `bold 8px ${displayFont}`;
+    ctx.textAlign = "center"; ctx.textBaseline = "top";
+    ctx.fillText("EXAM  GUIDE", robotCX, headY + headH + 5);
+
+    // Speech
+    const speechX21 = px + pw * 0.22;
+    const speechW21 = pw * 0.74;
+    ctx.textAlign = "left";
+    ctx.font = `bold 13px ${displayFont}`;
+    ctx.fillStyle = t.fgDim;
+    ctx.fillText("EXAM GUIDE  »", speechX21, py + ph * 0.10);
+
+    const guideLines21 = [
+      "Good job not killing me... I guess.",
+      "Back to your regularly scheduled exam. Try not to mess this up.",
+    ];
+    ctx.fillStyle = t.fg;
+    ctx.font = `16px ${bodyFont}`;
+    guideLines21.forEach((line, i) => {
+      ctx.fillText(line, speechX21, py + ph * 0.20 + i * 26, speechW21);
+    });
+
+    // Button
+    const btnW21 = 180; const btnH21 = 44;
+    const btnX21 = px + (pw - btnW21) / 2;
+    const btnY21 = py + ph - btnH21 - 18;
+    drawButton(gc, "CONTINUE", btnX21, btnY21, btnW21, btnH21, () => {
+      state.level21IntroSeen = true;
+      gc.render();
+    }, 18);
+
     return;
   }
 

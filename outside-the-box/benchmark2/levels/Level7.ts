@@ -32,7 +32,6 @@ const BOARD_FRAC = 0.72;   // top 72% of topBox is chalkboard
 const ERASER_W   = 52;
 const ERASER_H   = 22;
 const ERASE_PAD  = 14;     // px tolerance around eraser rect for erasure
-const CLEAR_THRESHOLD = 0.85;  // fraction of letters that must be erased
 
 // ── Eraser state ──────────────────────────────────────────────────────────────
 let eraserX    = -1;
@@ -88,7 +87,6 @@ export const drawLevel7 = (gc: GameContext) => {
     isDragging = false;
   }
 
-  const boardCleared = erasedSet.size >= Math.floor(LETTERS.length * CLEAR_THRESHOLD);
 
   // ── Draw chalkboard ───────────────────────────────────────────────────────
   ctx.fillStyle = "#1b3320";
@@ -174,8 +172,12 @@ export const drawLevel7 = (gc: GameContext) => {
   ctx.textBaseline = "middle";
   ctx.fillText("ERASER", eraserX + ERASER_W / 2 + 4, eraserY + ERASER_H / 2);
 
+  // Live count of F's still visible on the board
+  const remainingFs = LETTERS.filter((l, i) => l.char === 'F' && !erasedSet.has(i)).length;
+
   // ── Answer buttons ────────────────────────────────────────────────────────
-  // None of 8/11/15 are the real count (which is 13) — only 0 is correct (after erasing)
+  // Correct answer = whichever option matches the actual number of F's still on board.
+  // "15" is always wrong (only 13 F's exist). 8, 11, 0 are correct if that many remain.
   const options    = ["8", "11", "15", "0"];
   const btnW       = topBoxWidth * 0.145;
   const btnH       = deskH  * 0.40;
@@ -186,16 +188,14 @@ export const drawLevel7 = (gc: GameContext) => {
 
   options.forEach((opt, i) => {
     const bx      = btnStartX + i * (btnW + btnGap);
-    const isZero  = opt === "0";
-    const enabled = isZero ? boardCleared : true;
 
-    // Button background — paper/card look on desk
-    ctx.fillStyle = enabled ? "#e8e0cc" : "#a89880";
+    // All buttons always active — same styling
+    ctx.fillStyle    = "#e8e0cc";
     ctx.fillRect(bx, btnY, btnW, btnH);
-    ctx.strokeStyle = enabled ? "#5a3a14" : "#7a6a54";
-    ctx.lineWidth   = 1.5;
+    ctx.strokeStyle  = "#5a3a14";
+    ctx.lineWidth    = 1.5;
     ctx.strokeRect(bx, btnY, btnW, btnH);
-    ctx.fillStyle    = enabled ? "#2a1a08" : "#6a5a48";
+    ctx.fillStyle    = "#2a1a08";
     ctx.font         = `bold 22px ${displayFont}`;
     ctx.textAlign    = "center";
     ctx.textBaseline = "middle";
@@ -205,8 +205,8 @@ export const drawLevel7 = (gc: GameContext) => {
       gc.hitAreas.push({
         x: bx, y: btnY, w: btnW, h: btnH,
         action: () => {
-          if (isZero && boardCleared) {
-            // Correct — erase and move on
+          if (parseInt(opt) === remainingFs) {
+            // Correct — answer matches actual visible F count
             eraserX = -1; erasedSet.clear(); isDragging = false;
             state.currentLevel  = 8;
             state.levelSubPhase = "";
