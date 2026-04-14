@@ -210,12 +210,9 @@ export const drawLevel = (gc: GameContext) => {
     ctx.fillText("LEVELS 11–20 — MOVEMENT CHALLENGE", px + pw * 0.05, divY + 14);
 
     const controlLines = [
-      "WASD — move your character",
-      "SPACE — dash in the direction you're facing",
-      "H — pick up / release a block (must be facing it)",
-      "",
-      "Carry blocks into the answer zone at the top and spell the correct answer,",
-      "then hit SUBMIT. Watch out for special block types:",
+      "WASD — move your character, SPACE - dash , H - pick up/release blocks (must be facing it)",
+      "Carry blocks into the answer zone at the top and spell the correct answer, then hit SUBMIT. Watch out for special block types:",
+      "These levels are incomplete. The quiz is very simple now, but the movement and block mechanics are all there. The final version will have more complex layouts and puzzles.",
       "",
       "  Heavy — slows you to 25% speed while held",
       "  Glass — breaks if you drop and try to pick it up again",
