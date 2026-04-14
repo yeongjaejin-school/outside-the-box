@@ -87,7 +87,7 @@ export const MOVEMENT_LEVEL_CONFIG: Record<number, MovementLevelConfig> = {
     time: 38,
     blocks: [
       { x: 0.16, y: 0.28, value: "R", type: "normal" },
-      { x: 0.38, y: 0.42, value: "U", type: "countdown" },
+      { x: 0.38, y: 0.42, value: "10", type: "countdown" },
       { x: 0.62, y: 0.30, value: "N", type: "normal" },
       { x: 0.76, y: 0.56, value: "4", type: "countdown" },
     ],
