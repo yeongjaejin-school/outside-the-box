@@ -4,7 +4,7 @@ import { getLayout } from "../layout";
 
 export const drawLevel3 = (gc: GameContext) => {
   const { ctx, state, displayFont, bodyFont } = gc;
-  const { w, topBoxX, topBoxY, topBoxWidth, topBoxHeight, bottomBoxY } =
+  const { w, topBoxX, topBoxY, topBoxWidth, topBoxHeight, bottomBoxY, bottomBoxHeight, frameX, frameW } =
     getLayout(ctx);
   const cx = w / 2;
   const t = getTheme(state);
@@ -71,17 +71,22 @@ export const drawLevel3 = (gc: GameContext) => {
   }
 
   // Hidden hit area: the tittle (dot) on the 'i' in "Click" in the bottom panel.
-  // Bottom panel title "Click the dot." is drawn bold 30px, centered at (w/2, bottomBoxY+18),
-  // textBaseline="top". We measure to find the 'i' x-position, then estimate the tittle's y.
-  ctx.font = `bold 30px ${displayFont}`;
-  const fullStr = "Click the dot";
-  const fullW = ctx.measureText(fullStr).width;
-  const textLeft = cx - fullW / 2;
+  // drawBottomPanel renders guide text at 18px bodyFont, textBaseline="middle",
+  // starting at speechX = divX + contentWidth*0.025, centered vertically in the panel.
+  const contentX = frameX;
+  const contentWidth = frameW;
+  const divX = contentX + contentWidth * 0.155;
+  const speechX = divX + contentWidth * 0.025;
+  const panelCY = bottomBoxY + bottomBoxHeight / 2;
+  const lineGap = 27;
+  const startY = panelCY - lineGap / 2 + lineGap * 0.1; // 1 line only
+
+  ctx.font = `18px ${bodyFont}`;
   const prefixW = ctx.measureText("Cl").width;
   const iCharW = ctx.measureText("i").width;
-  const iDotCX = textLeft + prefixW + iCharW / 2;
-  const iDotCY = bottomBoxY + 18 + 5; // ~5px below top baseline ≈ tittle position
-  const hitR = 10;
+  const iDotCX = speechX + prefixW + iCharW / 2;
+  const iDotCY = startY - 6; // tittle sits above the text midline
+  const hitR = 8;
 
   gc.hitAreas.push({
     x: iDotCX - hitR,

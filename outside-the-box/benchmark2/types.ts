@@ -23,6 +23,8 @@ export interface GameState {
   guideTarget:  string;    // joined lines — used to detect text changes
   guideReveal:  number;    // characters revealed by the typewriter
   guideCursor:  boolean;   // blinking cursor visibility
+  movementIntroSeen: boolean;  // true after the level 11-20 intro popup is dismissed
+  level21IntroSeen:  boolean;  // true after the level 21 return popup is dismissed
 }
 
 export interface HitArea {

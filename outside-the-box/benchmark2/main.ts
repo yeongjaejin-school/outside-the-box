@@ -63,6 +63,8 @@ window.onload = () => {
     guideTarget: "",
     guideReveal: 0,
     guideCursor: false,
+    movementIntroSeen: false,
+    level21IntroSeen:  false,
   };
 
   const emitter = new EventEmitter();
@@ -71,6 +73,7 @@ window.onload = () => {
   let previousLevel = state.currentLevel;
   let previousScreen = state.currentScreen;
   let needsMovementReset = false;
+  let flashOpacity = 0;
   let lastTimerTick = performance.now();
   let lastFrameTick = performance.now();
 
@@ -228,6 +231,7 @@ window.onload = () => {
       gc.state.lives = 0;
       gc.state.gameOver = true;
     }
+    flashOpacity = 1;
   };
 
   gc.submitMovementAnswer = () => {
@@ -342,6 +346,12 @@ window.onload = () => {
 
     if (gc.state.gameOver) {
       drawGameOverOverlay(gc);
+    }
+
+    // Red flash overlay on life lost
+    if (flashOpacity > 0) {
+      ctx.fillStyle = `rgba(220, 30, 30, ${flashOpacity * 0.45})`;
+      ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     }
 
     previousLevel = gc.state.currentLevel;
@@ -509,7 +519,8 @@ window.onload = () => {
       movementLevelActive &&
       !gc.state.paused &&
       !gc.state.controlsOpen &&
-      !gc.state.gameOver
+      !gc.state.gameOver &&
+      gc.state.movementIntroSeen
     ) {
       const now = performance.now();
       const deltaSeconds = Math.max(0, (now - lastFrameTick) / 1000);
@@ -548,6 +559,12 @@ window.onload = () => {
     } else {
       lastTimerTick = performance.now();
       lastFrameTick = performance.now();
+    }
+
+    // Fade out red flash (works on all screens, not just movement levels)
+    if (flashOpacity > 0) {
+      flashOpacity = Math.max(0, flashOpacity - 0.04);
+      gc.render();
     }
 
     requestAnimationFrame(gameLoop);
