@@ -1,6 +1,6 @@
 import { GameContext } from "./types";
 import { getTheme } from "./theme";
-import { getLayout } from "./layout";
+import { getLayout, getMovementLayout } from "./layout";
 import { LEVEL_DATA } from "./levelData";
 
 /** Whether the current level can be skipped. */
@@ -82,6 +82,59 @@ export const drawButton = (
 
 export const drawBottomPanel = (gc: GameContext) => {
   const { ctx, state, displayFont, bodyFont } = gc;
+  const isMovementLevel = state.currentScreen === "level" && state.currentLevel >= 11 && state.currentLevel <= 20;
+
+  if (isMovementLevel) {
+    const movementLayout = getMovementLayout(ctx);
+    const t = getTheme(state);
+    const currentAnswer = gc.getCurrentAnswer() || "(empty)";
+    const timerText = `${String(gc.timeLeftSeconds).padStart(2, "0")}s`;
+    const timerColor = gc.timeLeftSeconds < 10 ? "#ff5252" : t.fgMid;
+    const submitW = 160;
+    const submitH = 48;
+    const submitX = movementLayout.bottomFrameWidth - submitW - 32;
+    const submitY = movementLayout.bottomFrameY + movementLayout.bottomFrameHeight / 2 - submitH / 2;
+    const resetW = 100;
+    const resetH = 34;
+    const resetX = movementLayout.bottomFrameWidth - resetW - 46;
+    const resetY = movementLayout.bottomFrameY + 28;
+
+    ctx.strokeStyle = t.stroke;
+    ctx.lineWidth = 4;
+    ctx.strokeRect(
+      movementLayout.bottomFrameX,
+      movementLayout.bottomFrameY,
+      movementLayout.bottomFrameWidth,
+      movementLayout.bottomFrameHeight,
+    );
+
+    ctx.fillStyle = t.fg;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    ctx.font = `bold 28px ${displayFont}`;
+    ctx.fillText("Arrange The Blocks", 28, movementLayout.bottomFrameY + 22, movementLayout.bottomFrameWidth * 0.5);
+
+    ctx.font = `17px ${bodyFont}`;
+    ctx.fillStyle = t.fgMid;
+    ctx.fillText(`Quiz: ${gc.quizPrompt}`, 28, movementLayout.bottomFrameY + 62, movementLayout.bottomFrameWidth * 0.56);
+
+    ctx.font = `15px ${bodyFont}`;
+    ctx.fillStyle = timerColor;
+    ctx.fillText(`Time Left: ${timerText}`, 28, movementLayout.bottomFrameY + 102, 180);
+
+    ctx.fillStyle = t.fg;
+    ctx.fillText(`Your Answer: ${currentAnswer}`, 28, movementLayout.bottomFrameY + 130, movementLayout.bottomFrameWidth * 0.52);
+
+    drawButton(gc, "RESET", resetX, resetY, resetW, resetH, () => {
+      gc.resetMovementLevel();
+    }, 14);
+
+    drawButton(gc, "SUBMIT", submitX, submitY, submitW, submitH, () => {
+      gc.submitMovementAnswer();
+    }, 18);
+    return;
+  }
+
   const { frameX, frameW, bottomBoxY, bottomBoxHeight } = getLayout(ctx);
   const t = getTheme(state);
   // Align panel width with the frame PNG, not the slightly narrower contentWidth
@@ -197,6 +250,57 @@ export const drawBottomPanel = (gc: GameContext) => {
 
 export const drawLevelHUD = (gc: GameContext) => {
   const { ctx, state, displayFont } = gc;
+  const isMovementLevel = state.currentScreen === "level" && state.currentLevel >= 11 && state.currentLevel <= 20;
+  if (isMovementLevel) {
+    const movementLayout = getMovementLayout(ctx);
+    const t = getTheme(state);
+    const padX = 28;
+    const padY = 28;
+
+    ctx.fillStyle = t.fg;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.font = `bold 24px ${displayFont}`;
+    ctx.fillText(`Q.${state.currentLevel}`, movementLayout.gameFrameX + padX, movementLayout.gameFrameY + padY);
+
+    const pauseW = 48;
+    const pauseH = 34;
+    const pauseX = movementLayout.gameFrameX + movementLayout.gameFrameWidth - padX - pauseW;
+    const pauseY = movementLayout.gameFrameY + padY - pauseH / 2;
+    ctx.strokeStyle = t.stroke;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(pauseX, pauseY, pauseW, pauseH);
+    ctx.fillStyle = t.fg;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = `bold 16px ${displayFont}`;
+    ctx.fillText("II", pauseX + pauseW / 2, pauseY + pauseH / 2);
+    gc.hitAreas.push({
+      x: pauseX,
+      y: pauseY,
+      w: pauseW,
+      h: pauseH,
+      action: () => {
+        state.paused = true;
+        gc.render();
+      },
+    });
+
+    const heartSize = 24;
+    const heartGap = 6;
+    const livesY = movementLayout.gameFrameY + movementLayout.gameFrameHeight - padY;
+    const totalW = 3 * heartSize + 2 * heartGap;
+    const livesX = movementLayout.gameFrameX + movementLayout.gameFrameWidth - padX - totalW;
+    ctx.textBaseline = "middle";
+    ctx.font = `${heartSize}px sans-serif`;
+    for (let i = 0; i < 3; i++) {
+      ctx.fillStyle = i < state.lives ? "#e03030" : state.darkMode ? "#444444" : "#bbbbbb";
+      ctx.textAlign = "left";
+      ctx.fillText("\u2665", livesX + i * (heartSize + heartGap), livesY);
+    }
+    return;
+  }
+
   const { topBoxX, topBoxY, topBoxWidth, topBoxHeight } = getLayout(ctx);
   const padX = topBoxWidth * 0.05;
   const padY = topBoxHeight * 0.08;
