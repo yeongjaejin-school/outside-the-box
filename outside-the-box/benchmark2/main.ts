@@ -76,6 +76,18 @@ window.onload = () => {
     mouseDown:   false,
     keysDown:    new Set<string>(),
     wheelDeltaY: 0,
+    sounds:      new SoundManager(),
+    // Movement level fields — populated by movement level system
+    resetMovementLevel:    () => {},
+    submitMovementAnswer:  () => {},
+    getCurrentAnswer:      () => "",
+    player:          null as any,
+    blocks:          [],
+    answerSlots:     [],
+    movementArea:    { x: 0, y: 0, width: 0, height: 0 },
+    quizPrompt:      "",
+    quizAnswer:      "",
+    timeLeftSeconds: 0,
   };
 
   gc.resetPlayerName = () => {
