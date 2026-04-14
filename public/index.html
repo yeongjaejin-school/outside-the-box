@@ -2,13 +2,50 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="refresh" content="0; url=./benchmark2/" />
-    <title>Redirecting to Benchmark 2</title>
-    <script>
-      window.location.replace("./benchmark2/");
-    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Outside the Box</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        background: #0d0d0d;
+        color: #e8e0cc;
+        font-family: "Trebuchet MS", "Verdana", sans-serif;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+      }
+
+      h1 {
+        font-size: clamp(24px, 4vw, 48px);
+        margin-bottom: 12px;
+      }
+
+      .card {
+        border: 2px solid #444;
+        padding: 16px 48px;
+        font-size: 18px;
+        font-family: inherit;
+        font-weight: bold;
+        color: #e8e0cc;
+        text-decoration: none;
+        transition: border-color 0.15s, background 0.15s;
+      }
+
+      .card:hover {
+        border-color: #e8e0cc;
+        background: rgba(255,255,255,0.04);
+      }
+    </style>
   </head>
   <body>
-    <p>Redirecting to <a href="./benchmark2/">Benchmark 2</a>...</p>
+    <h1>Outside the Box</h1>
+    <a class="card" href="./benchmark1/">Benchmark 1</a>
+    <a class="card" href="./benchmark2/">Benchmark 2</a>
+    <a class="card" href="./benchmark3/">Benchmark 3</a>
+    <a class="card" href="./benchmark4/">Benchmark 4</a>
   </body>
 </html>
