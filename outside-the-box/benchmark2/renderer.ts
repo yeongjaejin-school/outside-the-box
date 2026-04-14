@@ -3,7 +3,6 @@ import { getTheme } from "./theme";
 import { getLayout, getMovementLayout } from "./layout";
 import { LEVEL_DATA } from "./levelData";
 
-/** Whether the current level can be skipped. */
 export const isSkippable = (currentLevel: number): boolean => {
   const entry = LEVEL_DATA[currentLevel - 1];
   return entry ? entry.skippable !== false : true;
@@ -39,24 +38,16 @@ export const drawGameplayFrame = (gc: GameContext) => {
   const t = getTheme(state);
 
   if (gameplayFrameLoaded && gameplayFrame.naturalWidth > 0) {
-    // 1. Draw the stone-border PNG at the expanded frame area.
-    //    The stone border now hangs FRAME_BLEED px outside the play area.
     ctx.drawImage(gameplayFrame, 440, 180, 688, 572, frameX, frameY, frameW, frameH);
-
-    // 2. Fill the play-area interior with the background colour.
-    //    This erases the PNG's white interior so only the stone border is visible,
-    //    and gives levels a clean background to draw on regardless of dark/light mode.
     ctx.fillStyle = t.bg;
     ctx.fillRect(topBoxX, topBoxY, topBoxWidth, topBoxHeight);
   } else {
-    // Fallback: plain stroked rect
     ctx.strokeStyle = t.stroke;
-    ctx.lineWidth   = 4;
+    ctx.lineWidth = 4;
     ctx.strokeRect(topBoxX, topBoxY, topBoxWidth, topBoxHeight);
   }
 };
 
-/** Draw a labelled button and register it as a hit area. */
 export const drawButton = (
   gc: GameContext,
   label: string,
@@ -137,27 +128,22 @@ export const drawBottomPanel = (gc: GameContext) => {
 
   const { frameX, frameW, bottomBoxY, bottomBoxHeight } = getLayout(ctx);
   const t = getTheme(state);
-  // Align panel width with the frame PNG, not the slightly narrower contentWidth
-  const contentX    = frameX;
+  const contentX = frameX;
   const contentWidth = frameW;
 
-  // Panel border
   ctx.strokeStyle = t.stroke;
-  ctx.lineWidth   = 4;
+  ctx.lineWidth = 4;
   ctx.strokeRect(contentX, bottomBoxY, contentWidth, bottomBoxHeight);
 
   const panelCY = bottomBoxY + bottomBoxHeight / 2;
-
-  // ── Robot avatar ──────────────────────────────────────────────────────────
   const robotCX = contentX + contentWidth * 0.07;
-  const headW   = 50;
-  const headH   = 42;
-  const headX   = robotCX - headW / 2;
-  const headY   = panelCY - headH / 2 - 6;
+  const headW = 50;
+  const headH = 42;
+  const headX = robotCX - headW / 2;
+  const headY = panelCY - headH / 2 - 6;
 
-  // antenna stem + ball
   ctx.strokeStyle = t.stroke;
-  ctx.lineWidth   = 2;
+  ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.moveTo(robotCX, headY);
   ctx.lineTo(robotCX, headY - 11);
@@ -167,82 +153,74 @@ export const drawBottomPanel = (gc: GameContext) => {
   ctx.arc(robotCX, headY - 15, 4, 0, Math.PI * 2);
   ctx.fill();
 
-  // head box
   ctx.strokeStyle = t.stroke;
-  ctx.lineWidth   = 2;
+  ctx.lineWidth = 2;
   ctx.strokeRect(headX, headY, headW, headH);
 
-  // eyes — two lit rectangles
   const eyeY = headY + headH * 0.28;
   ctx.fillStyle = state.darkMode ? "#88bbff" : "#3366cc";
   ctx.fillRect(headX + headW * 0.16, eyeY, 11, 9);
   ctx.fillRect(headX + headW * 0.56, eyeY, 11, 9);
 
-  // mouth — row of small dim squares
   const mouthY = headY + headH * 0.65;
   ctx.fillStyle = t.fgDim;
   for (let i = 0; i < 5; i++) {
     ctx.fillRect(headX + headW * 0.13 + i * 8, mouthY, 5, 5);
   }
 
-  // label under robot
-  ctx.fillStyle    = t.fgDim;
-  ctx.textAlign    = "center";
+  ctx.fillStyle = t.fgDim;
+  ctx.textAlign = "center";
   ctx.textBaseline = "top";
-  ctx.font         = `bold 9px ${displayFont}`;
+  ctx.font = `bold 9px ${displayFont}`;
   ctx.fillText("EXAM  GUIDE", robotCX, headY + headH + 7, headW + 16);
 
-  // ── Vertical divider ──────────────────────────────────────────────────────
   const divX = contentX + contentWidth * 0.155;
   ctx.strokeStyle = t.divider;
-  ctx.lineWidth   = 1;
+  ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(divX, bottomBoxY + bottomBoxHeight * 0.10);
   ctx.lineTo(divX, bottomBoxY + bottomBoxHeight * 0.90);
   ctx.stroke();
 
-  // ── Speech content ────────────────────────────────────────────────────────
-  const speechX  = divX + contentWidth * 0.025;
-  const speechW  = contentX + contentWidth - speechX - contentWidth * 0.02;
+  const speechX = divX + contentWidth * 0.025;
+  const speechW = contentX + contentWidth - speechX - contentWidth * 0.02;
 
   const levelData = state.currentScreen === "level"
     ? LEVEL_DATA[state.currentLevel - 1]
     : { title: state.storyTitle, lines: state.storyLines };
 
-  // speaker tag
-  ctx.fillStyle    = t.fgDim;
-  ctx.textAlign    = "left";
+  ctx.fillStyle = t.fgDim;
+  ctx.textAlign = "left";
   ctx.textBaseline = "top";
-  ctx.font         = `bold 11px ${displayFont}`;
+  ctx.font = `bold 11px ${displayFont}`;
   ctx.fillText("EXAM GUIDE  »", speechX, bottomBoxY + bottomBoxHeight * 0.10);
 
-  // ── Typewriter: build partially-revealed display lines ───────────────────
-  const fullLines  = levelData.lines;
-  const totalChars = fullLines.reduce((s, l) => s + l.length, 0);
-  const isTyping   = state.guideReveal < totalChars;
+  const fullLines = levelData.lines;
+  const totalChars = fullLines.reduce((sum, line) => sum + line.length, 0);
+  const isTyping = state.guideReveal < totalChars;
 
   let charsLeft = Math.max(0, state.guideReveal);
   const displayLines: string[] = [];
   for (const line of fullLines) {
-    if (charsLeft <= 0) break;
+    if (charsLeft <= 0) {
+      break;
+    }
     const shown = Math.min(charsLeft, line.length);
     displayLines.push(line.slice(0, shown));
     charsLeft -= shown;
   }
 
-  // Blinking cursor appended to last visible line
   if (displayLines.length > 0 && (isTyping || state.guideCursor)) {
     displayLines[displayLines.length - 1] += " |";
   }
 
-  // speech lines
   const lineGap = 27;
-  const totalH  = fullLines.length * lineGap;
-  const startY  = panelCY - totalH / 2 + lineGap * 0.1;
+  const totalH = fullLines.length * lineGap;
+  const startY = panelCY - totalH / 2 + lineGap * 0.1;
 
-  ctx.fillStyle    = t.fg;
+  ctx.fillStyle = t.fg;
   ctx.textBaseline = "middle";
-  ctx.font         = `18px ${bodyFont}`;
+  ctx.font = `18px ${bodyFont}`;
   for (let i = 0; i < displayLines.length; i++) {
     ctx.fillText(displayLines[i], speechX, startY + i * lineGap, speechW);
   }
@@ -306,14 +284,12 @@ export const drawLevelHUD = (gc: GameContext) => {
   const padY = topBoxHeight * 0.08;
   const t = getTheme(state);
 
-  // Q.X — top left
   ctx.fillStyle = t.fg;
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
   ctx.font = `bold 26px ${displayFont}`;
   ctx.fillText(`Q.${state.currentLevel}`, topBoxX + padX, topBoxY + padY);
 
-  // Pause button — top right
   const pauseW = 48;
   const pauseH = 34;
   const pauseX = topBoxX + topBoxWidth - padX - pauseW;
@@ -337,44 +313,45 @@ export const drawLevelHUD = (gc: GameContext) => {
     },
   });
 
-  // Lives — position depends on whether SKIPS UI is visible
   const skipsUnlocked = state.currentLevel >= 9;
   const heartSize = 24;
-  const heartGap  = 6;
-  const livesY    = topBoxY + topBoxHeight - (skipsUnlocked ? padY * 3.2 : padY * 1.2);
-  const totalHW   = 3 * heartSize + 2 * heartGap;
-  const livesX    = topBoxX + topBoxWidth - padX - totalHW;
+  const heartGap = 6;
+  const livesY = topBoxY + topBoxHeight - (skipsUnlocked ? padY * 3.2 : padY * 1.2);
+  const totalHW = 3 * heartSize + 2 * heartGap;
+  const livesX = topBoxX + topBoxWidth - padX - totalHW;
 
   ctx.textBaseline = "middle";
-  ctx.font         = `${heartSize}px sans-serif`;
+  ctx.font = `${heartSize}px sans-serif`;
   for (let i = 0; i < 3; i++) {
     ctx.fillStyle =
       i < state.lives ? "#e03030" : state.darkMode ? "#444444" : "#bbbbbb";
     ctx.textAlign = "left";
-    ctx.fillText("♥", livesX + i * (heartSize + heartGap), livesY);
+    ctx.fillText("\u2665", livesX + i * (heartSize + heartGap), livesY);
   }
 
-  // SKIPS counter — only shown after the stranger encounter (level 9+)
   if (skipsUnlocked) {
-    const skipsY    = topBoxY + topBoxHeight - padY * 1.2;
-    const skipsW    = 110;
-    const skipsH    = 28;
-    const skipsX    = topBoxX + topBoxWidth - padX - skipsW;
-    const canSkip   = isSkippable(state.currentLevel) && state.skips > 0;
-    const skipLabel = `SKIP  ×${state.skips}`;
+    const skipsY = topBoxY + topBoxHeight - padY * 1.2;
+    const skipsW = 110;
+    const skipsH = 28;
+    const skipsX = topBoxX + topBoxWidth - padX - skipsW;
+    const canSkip = isSkippable(state.currentLevel) && state.skips > 0;
+    const skipLabel = `SKIP  x${state.skips}`;
 
-    ctx.strokeStyle  = canSkip ? t.stroke : t.divider;
-    ctx.lineWidth    = 1.5;
+    ctx.strokeStyle = canSkip ? t.stroke : t.divider;
+    ctx.lineWidth = 1.5;
     ctx.strokeRect(skipsX, skipsY - skipsH / 2, skipsW, skipsH);
-    ctx.fillStyle    = canSkip ? t.fg : t.fgDim;
-    ctx.textAlign    = "center";
+    ctx.fillStyle = canSkip ? t.fg : t.fgDim;
+    ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.font         = `bold 13px ${displayFont}`;
+    ctx.font = `bold 13px ${displayFont}`;
     ctx.fillText(skipLabel, skipsX + skipsW / 2, skipsY, skipsW - 8);
 
     if (canSkip) {
       gc.hitAreas.push({
-        x: skipsX, y: skipsY - skipsH / 2, w: skipsW, h: skipsH,
+        x: skipsX,
+        y: skipsY - skipsH / 2,
+        w: skipsW,
+        h: skipsH,
         action: () => {
           state.skips--;
           state.levelSubPhase = "";
