@@ -1,191 +1,258 @@
-// Level 23 — The Screensaver
-// A "SCREENSAVER" logo bounces around the box using Vec2.
-// A PAUSE button sits at the bottom. When the logo is near a corner (within 34px),
-// the logo glows. Clicking PAUSE while glowing = win. Clicking PAUSE otherwise = loseLife.
 import { GameContext } from '../types';
 import { getTheme }    from '../theme';
 import { getLayout }   from '../layout';
-import Vec2            from '../../../Wolfie2D/DataTypes/Vec2';
+import { drawButton }  from '../renderer';
 
-const LOGO_W  = 148;
-const LOGO_H  = 38;
-const SPEED   = 90;   // px / sec
-const CORNER_DIST = 40;
+// ── Logic: (P → Q) ∧ (Q → P) ─────────────────────────────────────────────────
+// Rows: [T,T] [T,F] [F,T] [F,F]
+// Fillable columns per row: [P→Q,  Q→P,  Result]
+const P_COL  = ['T','T','F','F'] as const;
+const Q_COL  = ['T','F','T','F'] as const;
+const ANSWER: ['T'|'F','T'|'F','T'|'F'][] = [
+  ['T','T','T'],
+  ['F','T','F'],
+  ['T','F','F'],
+  ['T','T','T'],
+];
+const COL_HEADS = ['P', 'Q', 'P → Q', 'Q → P', 'Result'];
 
-let animId23  = 0;
-let lastT23   = 0;
-let pos       = new Vec2(0, 0);
-let vel       = new Vec2(0, 0);
-let initialized23 = false;
-let nearCorner    = false;
-let missedFlashes = 0;  // failed clicks while glowing counts as misses for pressure
+type Cell = 'T' | 'F' | '?';
 
-function reset23(ox: number, oy: number, cw: number, ch: number) {
-  pos  = new Vec2(ox + cw * 0.3, oy + ch * 0.4);
-  // angle ~30° downward-right, deterministic start so logo reliably hits a corner
-  const angle = Math.PI / 6;
-  vel  = new Vec2(SPEED * Math.cos(angle), SPEED * Math.sin(angle));
-  initialized23 = true;
-  nearCorner    = false;
-  missedFlashes = 0;
-  lastT23 = 0;
+function fresh23(): Cell[][] {
+  return Array.from({ length: 4 }, () => ['?', '?', '?'] as Cell[]);
+}
+function nextVal(c: Cell): Cell { return c === '?' ? 'T' : c === 'T' ? 'F' : '?'; }
+function allFilled(cells: Cell[][]): boolean { return cells.every(r => r.every(c => c !== '?')); }
+function allCorrect(cells: Cell[][]): boolean {
+  return cells.every((r, ri) => r.every((c, ci) => c === ANSWER[ri][ci]));
 }
 
+// ── Module state ──────────────────────────────────────────────────────────────
+let cells23:  Cell[][] = fresh23();
+let feedback: string   = '';
+
+// ── Draw ──────────────────────────────────────────────────────────────────────
 export const drawLevel23 = (gc: GameContext) => {
   const { ctx, state, displayFont, bodyFont } = gc;
-  const { topBoxX, topBoxY, topBoxWidth, topBoxHeight } = getLayout(ctx);
+  const { w, topBoxX, topBoxY, topBoxWidth, topBoxHeight } = getLayout(ctx);
   const t  = getTheme(state);
-  const cx = topBoxX + topBoxWidth / 2;
+  const cx = w / 2;
 
-  // Fresh entry
-  if (state.levelSubPhase !== "active" && state.levelSubPhase !== "won") {
-    reset23(topBoxX, topBoxY, topBoxWidth, topBoxHeight * 0.82);
-    state.levelSubPhase = "active";
-  }
-
-  const cw = topBoxWidth;
-  const ch = topBoxHeight * 0.82;  // reserve bottom strip for controls
-  const ox = topBoxX;
-  const oy = topBoxY;
-
-  // ── Win screen ──────────────────────────────────────────────────────────────
-  if (state.levelSubPhase === "won") {
-    cancelAnimationFrame(animId23);
+  // ── Win screen ───────────────────────────────────────────────────────────────
+  if (state.levelSubPhase === 'win') {
     ctx.fillStyle    = t.fg;
-    ctx.textAlign    = "center";
-    ctx.textBaseline = "middle";
-    ctx.font         = `bold 30px ${displayFont}`;
-    ctx.fillText("IT HIT THE CORNER.", cx, oy + ch * 0.38);
-    ctx.font      = `18px ${bodyFont}`;
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font         = `bold 44px ${displayFont}`;
+    ctx.fillText('CASE CLOSED.', cx, topBoxY + topBoxHeight * 0.32);
+    ctx.font      = `19px ${bodyFont}`;
     ctx.fillStyle = t.fgMid;
-    ctx.fillText("Seventeen years. One moment. You were there.", cx, oy + ch * 0.54);
-
-    gc.hitAreas.push({
-      x: ox, y: oy, w: cw, h: ch,
-      action: () => {
-        initialized23 = false;
-        state.currentLevel  = 24;
-        state.levelSubPhase = "";
-        gc.render();
-      },
-    });
-    ctx.font      = `12px ${bodyFont}`;
+    ctx.fillText('The vault is secure when both conditions match.', cx, topBoxY + topBoxHeight * 0.47);
+    ctx.font      = `14px ${bodyFont}`;
     ctx.fillStyle = t.fgDim;
-    ctx.fillText("[ click anywhere to continue ]", cx, oy + ch * 0.70);
+    ctx.fillText('(P → Q) ∧ (Q → P)  is equivalent to  P ↔ Q', cx, topBoxY + topBoxHeight * 0.56);
+    drawButton(gc, 'CONTINUE  →', cx - 100, topBoxY + topBoxHeight * 0.68, 200, 48, () => {
+      state.currentLevel  = 24;
+      state.levelSubPhase = '';
+      gc.render();
+    });
     return;
   }
 
-  // ── Bounce box border (visible) ──────────────────────────────────────────────
-  ctx.strokeStyle = t.divider;
-  ctx.lineWidth   = 1;
-  ctx.strokeRect(ox, oy, cw, ch);
-
-  // ── Corner indicators ─────────────────────────────────────────────────────────
-  const corners = [
-    new Vec2(ox,          oy),
-    new Vec2(ox + cw,     oy),
-    new Vec2(ox,          oy + ch),
-    new Vec2(ox + cw,     oy + ch),
-  ];
-  corners.forEach(c => {
-    const dx = pos.x + LOGO_W / 2 - c.x;
-    const dy = pos.y + LOGO_H / 2 - c.y;
-    const d  = Math.sqrt(dx * dx + dy * dy);
-    const glow = d < CORNER_DIST * 2.5;
-    ctx.strokeStyle = glow ? (state.darkMode ? "#ffe066" : "#d4a000") : t.divider;
-    ctx.lineWidth   = glow ? 2 : 0.5;
-    ctx.strokeRect(c.x - 12, c.y - 12, 24, 24);
-  });
-
-  // ── Logo ──────────────────────────────────────────────────────────────────────
-  const lx = pos.x;
-  const ly = pos.y;
-
-  // Detect near-corner
-  let minCornerDist = Infinity;
-  corners.forEach(c => {
-    const dx = lx + LOGO_W / 2 - c.x;
-    const dy = ly + LOGO_H / 2 - c.y;
-    const d  = Math.sqrt(dx * dx + dy * dy);
-    if (d < minCornerDist) minCornerDist = d;
-  });
-  nearCorner = minCornerDist < CORNER_DIST;
-
-  const logoColor = nearCorner
-    ? (state.darkMode ? "#ffe066" : "#d4a000")
-    : (state.darkMode ? "#4488ff" : "#1144cc");
-
-  ctx.fillStyle   = logoColor;
-  ctx.fillRect(lx, ly, LOGO_W, LOGO_H);
-  ctx.fillStyle    = state.darkMode ? "#000" : "#fff";
-  ctx.font         = `bold 16px ${displayFont}`;
-  ctx.textAlign    = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("SCREENSAVER", lx + LOGO_W / 2, ly + LOGO_H / 2);
-
-  if (nearCorner) {
-    // Pulsing ring
-    ctx.strokeStyle = logoColor;
-    ctx.lineWidth   = 2;
-    ctx.strokeRect(lx - 4, ly - 4, LOGO_W + 8, LOGO_H + 8);
+  // ── Init ──────────────────────────────────────────────────────────────────────
+  if (state.levelSubPhase !== 'active') {
+    cells23  = fresh23();
+    feedback = '';
+    state.levelSubPhase = 'active';
   }
 
-  // ── Status text ───────────────────────────────────────────────────────────────
-  ctx.fillStyle    = nearCorner ? (state.darkMode ? "#ffe066" : "#d4a000") : t.fgDim;
-  ctx.font         = `bold 13px ${bodyFont}`;
-  ctx.textAlign    = "center";
-  ctx.textBaseline = "middle";
-  const statusY    = oy + ch + (topBoxHeight - ch) * 0.3;
-  ctx.fillText(
-    nearCorner ? "◉  CORNER PROXIMITY DETECTED — PAUSE NOW" : "Watching... waiting...",
-    cx, statusY,
-  );
+  // ── Plot header ───────────────────────────────────────────────────────────────
+  ctx.fillStyle    = t.fg;
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font         = `bold 15px ${displayFont}`;
+  ctx.fillText('CASE FILE  #7 — VAULT SECURITY PROTOCOL', cx, topBoxY + topBoxHeight * 0.05);
 
-  // ── PAUSE button ──────────────────────────────────────────────────────────────
-  const btnW = 160;
-  const btnH = 36;
-  const btnX = cx - btnW / 2;
-  const btnY = oy + ch + (topBoxHeight - ch) * 0.55;
+  ctx.font      = `12px ${bodyFont}`;
+  ctx.fillStyle = t.fgMid;
+  ctx.fillText('The vault has two conditions:   P — vault is sealed     Q — guard is on duty', cx, topBoxY + topBoxHeight * 0.11);
 
+  ctx.font      = `bold 12px ${bodyFont}`;
+  ctx.fillStyle = t.fgDim;
+  ctx.fillText('Security passes when:   (P → Q)  ∧  (Q → P)', cx, topBoxY + topBoxHeight * 0.17);
+
+  // ── Truth table ───────────────────────────────────────────────────────────────
+  const tblW  = topBoxWidth  * 0.76;
+  const colW  = tblW / 5;
+  const rowH  = topBoxHeight * 0.097;
+  const tblH  = rowH * 5;
+  const tblX  = cx - tblW / 2;
+  const tblY  = topBoxY + topBoxHeight * 0.22;
+
+  // Header background
+  ctx.fillStyle = state.darkMode ? '#1e1e1e' : '#d8d8d8';
+  ctx.fillRect(tblX, tblY, tblW, rowH);
+
+  // Outer border
   ctx.strokeStyle = t.stroke;
   ctx.lineWidth   = 2;
-  ctx.strokeRect(btnX, btnY, btnW, btnH);
-  ctx.fillStyle    = t.fg;
-  ctx.font         = `bold 16px ${displayFont}`;
-  ctx.textAlign    = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("⏸  PAUSE", btnX + btnW / 2, btnY + btnH / 2);
+  ctx.strokeRect(tblX, tblY, tblW, tblH);
 
-  gc.hitAreas.push({
-    x: btnX, y: btnY, w: btnW, h: btnH,
-    action: () => {
-      if (nearCorner) {
-        cancelAnimationFrame(animId23);
-        state.levelSubPhase = "won";
-        gc.render();
-      } else {
-        gc.loseLife();
-      }
-    },
+  // Inner grid lines
+  ctx.strokeStyle = t.divider;
+  ctx.lineWidth   = 1;
+  for (let r = 1; r < 5; r++) {
+    ctx.beginPath();
+    ctx.moveTo(tblX, tblY + r * rowH);
+    ctx.lineTo(tblX + tblW, tblY + r * rowH);
+    ctx.stroke();
+  }
+  for (let c = 1; c < 5; c++) {
+    ctx.beginPath();
+    ctx.moveTo(tblX + c * colW, tblY);
+    ctx.lineTo(tblX + c * colW, tblY + tblH);
+    ctx.stroke();
+  }
+  // Separator after Q column (thicker)
+  ctx.strokeStyle = t.stroke;
+  ctx.lineWidth   = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(tblX + 2 * colW, tblY);
+  ctx.lineTo(tblX + 2 * colW, tblY + tblH);
+  ctx.stroke();
+
+  // Header text
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font         = `bold 13px ${bodyFont}`;
+  COL_HEADS.forEach((h, i) => {
+    ctx.fillStyle = i < 2 ? t.fgDim : t.fgMid;
+    ctx.fillText(h, tblX + colW * i + colW / 2, tblY + rowH / 2);
   });
 
-  // ── Physics loop ──────────────────────────────────────────────────────────────
-  cancelAnimationFrame(animId23);
-  if (state.levelSubPhase !== "active") return;
+  // Data rows
+  for (let r = 0; r < 4; r++) {
+    const ry  = tblY + (r + 1) * rowH;
+    const rcy = ry + rowH / 2;
 
-  animId23 = requestAnimationFrame((ts: number) => {
-    if (gc.state.currentLevel !== 23 || gc.state.currentScreen !== "level") return;
-    const dt = lastT23 ? Math.min((ts - lastT23) / 1000, 0.05) : 0.016;
-    lastT23  = ts;
+    // Fixed P, Q
+    ctx.fillStyle = t.fgDim;
+    ctx.font      = `bold 15px ${bodyFont}`;
+    ctx.textAlign = 'center';
+    ctx.fillText(P_COL[r], tblX + colW * 0.5, rcy);
+    ctx.fillText(Q_COL[r], tblX + colW * 1.5, rcy);
 
-    pos = new Vec2(pos.x + vel.x * dt, pos.y + vel.y * dt);
+    // Fillable cells (columns 2, 3, 4)
+    for (let fi = 0; fi < 3; fi++) {
+      const colIdx = fi + 2;
+      const cellX  = tblX + colIdx * colW;
+      const cellCX = cellX + colW / 2;
+      const val    = cells23[r][fi];
 
-    // Bounce off walls (keep logo within ox,oy .. ox+cw-LOGO_W, oy+ch-LOGO_H)
-    if (pos.x < ox)              { pos = new Vec2(ox, pos.y);              vel = new Vec2(Math.abs(vel.x), vel.y); }
-    if (pos.x > ox + cw - LOGO_W){ pos = new Vec2(ox + cw - LOGO_W, pos.y); vel = new Vec2(-Math.abs(vel.x), vel.y); }
-    if (pos.y < oy)              { pos = new Vec2(pos.x, oy);              vel = new Vec2(vel.x, Math.abs(vel.y)); }
-    if (pos.y > oy + ch - LOGO_H){ pos = new Vec2(pos.x, oy + ch - LOGO_H); vel = new Vec2(vel.x, -Math.abs(vel.y)); }
+      // Hover highlight
+      const over = gc.mouseX >= cellX && gc.mouseX <= cellX + colW &&
+                   gc.mouseY >= ry    && gc.mouseY <= ry + rowH;
+      if (over) {
+        ctx.fillStyle = state.darkMode ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)';
+        ctx.fillRect(cellX + 1, ry + 1, colW - 2, rowH - 2);
+      }
 
-    gc.render();
+      // Cell value
+      if (val === '?') {
+        ctx.fillStyle    = t.fgDim;
+        ctx.font         = `14px ${bodyFont}`;
+        ctx.textAlign    = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('—', cellCX, rcy);
+      } else {
+        ctx.fillStyle = val === 'T'
+          ? (state.darkMode ? '#55cc77' : '#1a7a3a')
+          : (state.darkMode ? '#ee5555' : '#bb1111');
+        ctx.font      = `bold 17px ${displayFont}`;
+        ctx.textAlign = 'center';
+        ctx.fillText(val, cellCX, rcy);
+      }
+
+      // Hit area
+      const cr = r, cfi = fi;
+      gc.hitAreas.push({
+        x: cellX, y: ry, w: colW, h: rowH,
+        action: () => {
+          cells23[cr][cfi] = nextVal(cells23[cr][cfi]);
+          feedback = '';
+          gc.render();
+        },
+      });
+    }
+  }
+
+  // Small instruction below table
+  ctx.fillStyle    = t.fgDim;
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font         = `10px ${bodyFont}`;
+  ctx.fillText('Click cells to cycle  T / F / —', cx, tblY + tblH + 10);
+
+  // ── Feedback message ──────────────────────────────────────────────────────────
+  if (feedback) {
+    ctx.fillStyle = state.darkMode ? '#ffaa44' : '#aa5500';
+    ctx.font      = `bold 12px ${bodyFont}`;
+    ctx.fillText(feedback, cx, tblY + tblH + 24);
+  }
+
+  // ── Conclusion options ────────────────────────────────────────────────────────
+  const tableOK = allFilled(cells23) && allCorrect(cells23);
+  const optBtnW = topBoxWidth  * 0.44;
+  const optBtnH = 36;
+  const optGapX = topBoxWidth  * 0.03;
+  const optGapY = 7;
+  const optY0   = topBoxY + topBoxHeight * 0.78;
+
+  const opts = [
+    { text: 'A)  Protocol is always satisfied',         right: false },
+    { text: 'B)  Satisfied only when vault is sealed',  right: false },
+    { text: 'C)  Satisfied when both conditions match', right: true  },
+    { text: 'D)  Protocol is never satisfied',          right: false },
+  ];
+
+  opts.forEach((opt, i) => {
+    const col = i % 2;
+    const row = Math.floor(i / 2);
+    const bx  = cx - optBtnW - optGapX / 2 + col * (optBtnW + optGapX);
+    const by  = optY0 + row * (optBtnH + optGapY);
+
+    // Highlight correct option once table is proven
+    const isUnlocked = opt.right && tableOK;
+    ctx.fillStyle   = isUnlocked
+      ? (state.darkMode ? '#1a3a22' : '#c8ecd2')
+      : (state.darkMode ? '#1c1c1c' : '#e2e2e2');
+    ctx.strokeStyle = isUnlocked ? (state.darkMode ? '#55cc77' : '#1a7a3a') : t.divider;
+    ctx.lineWidth   = isUnlocked ? 2 : 1;
+    ctx.fillRect(bx, by, optBtnW, optBtnH);
+    ctx.strokeRect(bx, by, optBtnW, optBtnH);
+
+    ctx.fillStyle    = opt.right && !tableOK ? t.fgDim : t.fg;
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font         = `${isUnlocked ? 'bold ' : ''}12px ${bodyFont}`;
+    ctx.fillText(opt.text, bx + optBtnW / 2, by + optBtnH / 2, optBtnW - 12);
+
+    gc.hitAreas.push({
+      x: bx, y: by, w: optBtnW, h: optBtnH,
+      action: () => {
+        if (opt.right) {
+          if (tableOK) {
+            state.levelSubPhase = 'win';
+          } else if (!allFilled(cells23)) {
+            feedback = 'You have not proven it yet — complete the truth table first.';
+          } else {
+            feedback = 'Your table contains errors. Review your work.';
+          }
+        } else {
+          gc.loseLife();
+        }
+        gc.render();
+      },
+    });
   });
 };

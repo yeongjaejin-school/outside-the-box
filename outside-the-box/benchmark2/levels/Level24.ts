@@ -1,159 +1,138 @@
-// Level 24 — The Survey
-// 5 mandatory star-rating questions. A "SKIP SURVEY" button that's a trap.
-// Once all 5 are rated, SUBMIT activates and advances the level.
 import { GameContext } from '../types';
 import { getTheme }    from '../theme';
 import { getLayout }   from '../layout';
-import { drawButton }  from '../renderer';
 
-const QUESTIONS = [
-  "How satisfied are you with this exam so far?",
-  "How would you rate the quality of the questions?",
-  "How fairly do you feel the difficulty has been calibrated?",
-  "How likely are you to recommend this exam to a colleague?",
-  "How transparent did you find the instructions throughout?",
+// ── Decoy buttons scattered around the box (all lose a life) ──────────────────
+// Positions are fractions of topBoxWidth / topBoxHeight
+const DECOYS: { label: string; fx: number; fy: number; fw: number; fh: number }[] = [
+  { label: 'HINT',             fx: 0.02,  fy: 0.04,  fw: 0.14,  fh: 0.09 },
+  { label: 'CALCULATE',        fx: 0.84,  fy: 0.04,  fw: 0.14,  fh: 0.09 },
+  { label: 'EASY  MODE  ON',   fx: 0.32,  fy: 0.03,  fw: 0.22,  fh: 0.08 },
+  { label: 'SHOW STEPS',       fx: 0.01,  fy: 0.40,  fw: 0.18,  fh: 0.09 },
+  { label: 'SKIP  →',          fx: 0.83,  fy: 0.40,  fw: 0.15,  fh: 0.09 },
+  { label: 'CONFIRM',          fx: 0.29,  fy: 0.71,  fw: 0.20,  fh: 0.11 },
+  { label: 'CHECK ANSWER',     fx: 0.02,  fy: 0.74,  fw: 0.20,  fh: 0.09 },
+  { label: 'USE CALCULATOR',   fx: 0.76,  fy: 0.74,  fw: 0.22,  fh: 0.09 },
+  { label: 'SUBMIT ALL',       fx: 0.22,  fy: 0.87,  fw: 0.55,  fh: 0.10 },
+  { label: 'SOLVE',            fx: 0.54,  fy: 0.71,  fw: 0.12,  fh: 0.11 },
 ];
 
-// Per-session ratings (0 = unrated, 1-5 = rated)
-let ratings: number[] = [0, 0, 0, 0, 0];
+// ── Answer choices ────────────────────────────────────────────────────────────
+const ANSWERS: { label: string; correct: boolean }[] = [
+  { label: '25',   correct: false },
+  { label: '30',   correct: true  },
+  { label: '35',   correct: false },
+  { label: '1515', correct: false },
+];
 
+// ── Draw ──────────────────────────────────────────────────────────────────────
 export const drawLevel24 = (gc: GameContext) => {
   const { ctx, state, displayFont, bodyFont } = gc;
-  const { topBoxX, topBoxY, topBoxWidth, topBoxHeight } = getLayout(ctx);
+  const { w, topBoxX, topBoxY, topBoxWidth, topBoxHeight } = getLayout(ctx);
   const t  = getTheme(state);
-  const cx = topBoxX + topBoxWidth / 2;
+  const cx = w / 2;
 
-  if (state.levelSubPhase !== "active" && state.levelSubPhase !== "won") {
-    ratings = [0, 0, 0, 0, 0];
-    state.levelSubPhase = "active";
-  }
-
-  // ── Win screen ────────────────────────────────────────────────────────────────
-  if (state.levelSubPhase === "won") {
+  // ── Win screen ─────────────────────────────────────────────────────────────
+  if (state.levelSubPhase === 'win') {
     ctx.fillStyle    = t.fg;
-    ctx.textAlign    = "center";
-    ctx.textBaseline = "middle";
-    ctx.font         = `bold 26px ${displayFont}`;
-    ctx.fillText("Thank you for your feedback.", cx, topBoxY + topBoxHeight * 0.34);
-    ctx.font      = `17px ${bodyFont}`;
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font         = `bold 44px ${displayFont}`;
+    ctx.fillText('CORRECT.', cx, topBoxY + topBoxHeight * 0.34);
+    ctx.font      = `20px ${bodyFont}`;
     ctx.fillStyle = t.fgMid;
-    ctx.fillText("Your responses have been logged, aggregated, and ignored.", cx, topBoxY + topBoxHeight * 0.48);
-    ctx.font      = `13px ${bodyFont}`;
-    ctx.fillStyle = t.fgDim;
-    ctx.fillText("We asked anyway. That was the point.", cx, topBoxY + topBoxHeight * 0.58);
-    drawButton(gc, "CONTINUE  →", cx - 100, topBoxY + topBoxHeight * 0.70, 200, 44, () => {
-      state.currentLevel  = 25;
-      state.levelSubPhase = "";
-      gc.render();
+    ctx.fillText('15 + 15 = 30.  Well done.', cx, topBoxY + topBoxHeight * 0.50);
+    // Win — draw CONTINUE inline (no drawButton import needed, replicate manually)
+    const bx = cx - 100, by = topBoxY + topBoxHeight * 0.65, bw = 200, bh = 48;
+    ctx.fillStyle   = state.darkMode ? '#222' : '#ddd';
+    ctx.strokeStyle = t.stroke;
+    ctx.lineWidth   = 2;
+    ctx.fillRect(bx, by, bw, bh);
+    ctx.strokeRect(bx, by, bw, bh);
+    ctx.fillStyle    = t.fg;
+    ctx.font         = `bold 18px ${displayFont}`;
+    ctx.fillText('CONTINUE  →', cx, by + bh / 2);
+    gc.hitAreas.push({
+      x: bx, y: by, w: bw, h: bh,
+      action: () => {
+        state.currentLevel  = 25;
+        state.levelSubPhase = '';
+        gc.render();
+      },
     });
     return;
   }
 
-  const allRated = ratings.every(r => r > 0);
-
-  // ── Survey heading ────────────────────────────────────────────────────────────
-  ctx.fillStyle    = t.fg;
-  ctx.textAlign    = "center";
-  ctx.textBaseline = "middle";
-  ctx.font         = `bold 18px ${displayFont}`;
-  ctx.fillText("CANDIDATE SATISFACTION SURVEY  —  MANDATORY", cx, topBoxY + topBoxHeight * 0.08);
-
-  // ── SKIP SURVEY trap ──────────────────────────────────────────────────────────
-  const skipW = 118;
-  const skipH = 28;
-  const skipX = topBoxX + topBoxWidth - skipW - 12;
-  const skipY = topBoxY + topBoxHeight * 0.03;
-
-  ctx.strokeStyle = state.darkMode ? "#555" : "#bbb";
-  ctx.lineWidth   = 1;
-  ctx.strokeRect(skipX, skipY, skipW, skipH);
-  ctx.fillStyle    = state.darkMode ? "#888" : "#777";
-  ctx.font         = `12px ${bodyFont}`;
-  ctx.textAlign    = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("SKIP SURVEY  ›", skipX + skipW / 2, skipY + skipH / 2);
-  gc.hitAreas.push({
-    x: skipX, y: skipY, w: skipW, h: skipH,
-    action: () => { gc.loseLife(); },
-  });
-
-  // ── Questions + star ratings ──────────────────────────────────────────────────
-  const rowH   = topBoxHeight * 0.112;
-  const starSz = 20;
-  const starGap = 4;
-  const startY = topBoxY + topBoxHeight * 0.14;
-
-  QUESTIONS.forEach((q, qi) => {
-    const rowY = startY + qi * rowH;
-
-    // Question text
-    ctx.fillStyle    = t.fg;
-    ctx.font         = `13px ${bodyFont}`;
-    ctx.textAlign    = "left";
-    ctx.textBaseline = "middle";
-    ctx.fillText(`${qi + 1}. ${q}`, topBoxX + 18, rowY + rowH * 0.28);
-
-    // Stars
-    const starsWidth = 5 * starSz + 4 * starGap;
-    const starsX     = topBoxX + topBoxWidth - starsWidth - 16;
-    const starsY     = rowY + rowH * 0.28;
-
-    for (let s = 1; s <= 5; s++) {
-      const sx = starsX + (s - 1) * (starSz + starGap);
-      const filled = s <= ratings[qi];
-
-      ctx.fillStyle = filled
-        ? (state.darkMode ? "#ffe066" : "#f0a000")
-        : (state.darkMode ? "#333" : "#ddd");
-      ctx.font = `${starSz}px sans-serif`;
-      ctx.textAlign    = "left";
-      ctx.textBaseline = "middle";
-      ctx.fillText("★", sx, starsY);
-
-      const captured_qi = qi;
-      const captured_s  = s;
-      gc.hitAreas.push({
-        x: sx, y: starsY - starSz / 2, w: starSz, h: starSz,
-        action: () => {
-          ratings[captured_qi] = captured_s;
-          gc.render();
-        },
-      });
-    }
-
-    // Thin row separator
-    if (qi < QUESTIONS.length - 1) {
-      ctx.strokeStyle = t.divider;
-      ctx.lineWidth   = 0.5;
-      ctx.beginPath();
-      ctx.moveTo(topBoxX + 12, rowY + rowH);
-      ctx.lineTo(topBoxX + topBoxWidth - 12, rowY + rowH);
-      ctx.stroke();
-    }
-  });
-
-  // ── Submit ────────────────────────────────────────────────────────────────────
-  const submitY = topBoxY + topBoxHeight * 0.84;
-  const submitW = 160;
-  const submitH = 40;
-
-  if (allRated) {
-    drawButton(gc, "SUBMIT  →", cx - submitW / 2, submitY, submitW, submitH, () => {
-      state.levelSubPhase = "won";
-      gc.render();
-    });
-  } else {
-    ctx.strokeStyle = state.darkMode ? "#333" : "#ccc";
-    ctx.lineWidth   = 1.5;
-    ctx.strokeRect(cx - submitW / 2, submitY, submitW, submitH);
-    ctx.fillStyle    = state.darkMode ? "#444" : "#bbb";
-    ctx.font         = `15px ${bodyFont}`;
-    ctx.textAlign    = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("SUBMIT  →", cx, submitY + submitH / 2);
-
-    ctx.font      = `11px ${bodyFont}`;
-    ctx.fillStyle = t.fgDim;
-    ctx.fillText("Rate all questions to enable.", cx, submitY + submitH + 10);
+  // ── Init ──────────────────────────────────────────────────────────────────────
+  if (state.levelSubPhase !== 'active') {
+    state.levelSubPhase = 'active';
   }
+
+  // ── Question ──────────────────────────────────────────────────────────────────
+  ctx.fillStyle    = t.fg;
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font         = `bold 68px ${displayFont}`;
+  ctx.fillText('15  +  15  =  ?', cx, topBoxY + topBoxHeight * 0.30);
+
+  // ── Decoy buttons ─────────────────────────────────────────────────────────────
+  DECOYS.forEach(({ label, fx, fy, fw, fh }) => {
+    const bx = topBoxX + fx * topBoxWidth;
+    const by = topBoxY + fy * topBoxHeight;
+    const bw = fw * topBoxWidth;
+    const bh = fh * topBoxHeight;
+
+    ctx.fillStyle   = state.darkMode ? '#242424' : '#d0d0d0';
+    ctx.strokeStyle = t.stroke;
+    ctx.lineWidth   = 2;
+    ctx.fillRect(bx, by, bw, bh);
+    ctx.strokeRect(bx, by, bw, bh);
+
+    ctx.fillStyle    = t.fg;
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font         = `bold 13px ${bodyFont}`;
+    ctx.fillText(label, bx + bw / 2, by + bh / 2);
+
+    gc.hitAreas.push({
+      x: bx, y: by, w: bw, h: bh,
+      action: () => { gc.loseLife(); gc.render(); },
+    });
+  });
+
+  // ── 4 answer buttons ──────────────────────────────────────────────────────────
+  const ansBtnW   = topBoxWidth  * 0.17;
+  const ansBtnH   = 56;
+  const ansGap    = topBoxWidth  * 0.03;
+  const totalW    = ansBtnW * 4 + ansGap * 3;
+  const ansStartX = cx - totalW / 2;
+  const ansY      = topBoxY + topBoxHeight * 0.50;
+
+  ANSWERS.forEach(({ label, correct }, i) => {
+    const bx = ansStartX + i * (ansBtnW + ansGap);
+
+    ctx.fillStyle   = state.darkMode ? '#1e1e1e' : '#e8e8e8';
+    ctx.strokeStyle = t.stroke;
+    ctx.lineWidth   = 2.5;
+    ctx.fillRect(bx, ansY, ansBtnW, ansBtnH);
+    ctx.strokeRect(bx, ansY, ansBtnW, ansBtnH);
+
+    ctx.fillStyle    = t.fg;
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font         = `bold 28px ${displayFont}`;
+    ctx.fillText(label, bx + ansBtnW / 2, ansY + ansBtnH / 2);
+
+    gc.hitAreas.push({
+      x: bx, y: ansY, w: ansBtnW, h: ansBtnH,
+      action: () => {
+        if (correct) {
+          state.levelSubPhase = 'win';
+        } else {
+          gc.loseLife();
+        }
+        gc.render();
+      },
+    });
+  });
 };

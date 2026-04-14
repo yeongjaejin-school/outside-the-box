@@ -3,6 +3,9 @@ import { getTheme }    from '../theme';
 import { getLayout }   from '../layout';
 import { drawButton }  from '../renderer';
 import Vec2            from '../../../Wolfie2D/DataTypes/Vec2';
+import StateMachine    from '../../../Wolfie2D/DataTypes/State/StateMachine';
+import State           from '../../../Wolfie2D/DataTypes/State/State';
+import GameEvent       from '../../../Wolfie2D/Events/GameEvent';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const PADDLE_H      = 0.22;   // fraction of court height
@@ -13,9 +16,106 @@ const AI_RIGHT      = 0.975;  // right edge of AI paddle (normalised)
 const SPEED_INIT    = 0.48;   // initial ball speed (court-widths / sec)
 const SPEED_MAX     = 0.95;
 const PLAYER_SPEED  = 1.1;    // court-heights / sec for keyboard movement
-const AI_SPEED      = 0.52;   // max AI movement per sec (reduced for beatable)
-const AI_LERP       = 6.0;    // AI smoothing (lerp factor per second)
+const AI_CHASE_SPEED = 0.34;  // max AI movement per sec when chasing (reduced)
+const AI_IDLE_SPEED  = 0.18;  // max AI drift speed when idle
+const AI_LERP        = 3.5;   // AI smoothing (lerp factor per second, softer)
 const WIN_SCORE     = 3;
+
+// ── Shared AI data (passed between states via the PongAI state machine) ───────
+interface PongAIData {
+  ballPos:       Vec2;
+  ballVel:       Vec2;
+  aiY:           number;
+  aiTargetY:     number;
+  reactionTimer: number;   // seconds before AI reacts after ball changes direction
+  noiseSeed:     number;   // sticky noise offset, re-rolled per rally
+}
+
+// ── Wolfie2D States ───────────────────────────────────────────────────────────
+
+/** Ball is heading away from AI — paddle drifts lazily toward center */
+class PongIdleState extends State {
+  onEnter(_options: Record<string, any>): void {}
+  onExit():  Record<string, any> { return {}; }
+  handleInput(_event: GameEvent): void {}
+
+  update(dt: number): void {
+    const data = (this.parent as PongAI).data;
+
+    // Lazy drift toward y=0.5
+    const diff    = 0.5 - data.aiY;
+    const maxStep = AI_IDLE_SPEED * dt;
+    data.aiY += Math.sign(diff) * Math.min(Math.abs(diff) * 1.5 * dt, maxStep);
+    data.aiY  = Math.max(PADDLE_H / 2, Math.min(1 - PADDLE_H / 2, data.aiY));
+
+    // Ball now heading toward AI → transition to chase (after reaction delay)
+    if (data.ballVel.x > 0) {
+      // Reaction delay: 200 – 450 ms — makes it look human and miss occasionally
+      data.reactionTimer = 0.20 + Math.random() * 0.25;
+      // Roll a new sticky noise offset for this rally
+      data.noiseSeed = (Math.random() - 0.5) * 0.20;
+      this.finished("chase");
+    }
+  }
+}
+
+/** Ball is heading toward AI — paddle tracks ball with imperfect prediction */
+class PongChaseState extends State {
+  onEnter(_options: Record<string, any>): void {}
+  onExit():  Record<string, any> { return {}; }
+  handleInput(_event: GameEvent): void {}
+
+  update(dt: number): void {
+    const data = (this.parent as PongAI).data;
+
+    if (data.reactionTimer > 0) {
+      // Frozen reaction period — keep moving toward old target but don't update it
+      data.reactionTimer -= dt;
+    } else {
+      // Update target with sticky noise (doesn't re-roll every frame so it
+      // commits to a slightly wrong position, making it missable)
+      data.aiTargetY = data.ballPos.y + data.noiseSeed;
+    }
+
+    const diff    = data.aiTargetY - data.aiY;
+    const maxStep = AI_CHASE_SPEED * dt;
+    data.aiY += Math.sign(diff) * Math.min(Math.abs(diff) * AI_LERP * dt, maxStep);
+    data.aiY  = Math.max(PADDLE_H / 2, Math.min(1 - PADDLE_H / 2, data.aiY));
+
+    // Ball heading away again → back to idle
+    if (data.ballVel.x <= 0) {
+      this.finished("idle");
+    }
+  }
+}
+
+// ── PongAI — StateMachine that owns and drives the AI paddle ─────────────────
+class PongAI extends StateMachine {
+  data: PongAIData = {
+    ballPos:       new Vec2(0.5, 0.5),
+    ballVel:       new Vec2(0, 0),
+    aiY:           0.5,
+    aiTargetY:     0.5,
+    reactionTimer: 0,
+    noiseSeed:     0,
+  };
+
+  constructor() {
+    super();
+    this.addState("idle",  new PongIdleState(this));
+    this.addState("chase", new PongChaseState(this));
+    this.initialize("idle", {});
+  }
+
+  reset(): void {
+    this.data.aiY           = 0.5;
+    this.data.aiTargetY     = 0.5;
+    this.data.reactionTimer = 0;
+    this.data.noiseSeed     = 0;
+    // Force back to idle state
+    this.initialize("idle", {});
+  }
+}
 
 // ── Game state ────────────────────────────────────────────────────────────────
 let animId6      = 0;
@@ -23,22 +123,20 @@ let lastTime     = 0;
 let ballPos      = new Vec2(0.5, 0.5);
 let ballVel      = new Vec2(0, 0);
 let playerY      = 0.5;
-let aiY          = 0.5;
-let aiTargetY    = 0.5;
 let playerScore  = 0;
 let aiScore      = 0;
 let rallying     = false;
+let pongAI       = new PongAI();
 
 function resetPong() {
   ballPos     = new Vec2(0.5, 0.5);
   ballVel     = new Vec2(0, 0);
   playerY     = 0.5;
-  aiY         = 0.5;
-  aiTargetY   = 0.5;
   playerScore = 0;
   aiScore     = 0;
   rallying    = false;
   lastTime    = 0;
+  pongAI      = new PongAI();
 }
 
 function serve(towardAI: boolean) {
@@ -106,8 +204,8 @@ export const drawLevel6 = (gc: GameContext) => {
   ctx.fillText(`${playerScore}`, ox + cw * 0.26, oy + 10);
   ctx.fillText(`${aiScore}`,     ox + cw * 0.74, oy + 10);
   ctx.font = `11px ${bodyFont}`;
-  ctx.fillText("YOU",  ox + cw * 0.26, oy + 58);
-  ctx.fillText("A.I.", ox + cw * 0.74, oy + 58);
+  ctx.fillText("YOU",      ox + cw * 0.26, oy + 58);
+  ctx.fillText("Frodrick", ox + cw * 0.74, oy + 58);
 
   // ── Control hint ──────────────────────────────────────────────────────────
   ctx.fillStyle    = t.fgDim;
@@ -132,7 +230,7 @@ export const drawLevel6 = (gc: GameContext) => {
 
   ctx.fillStyle = t.fg;
   ctx.fillRect(ox + PLAYER_LEFT * cw, oy + (playerY - PADDLE_H / 2) * ch, pPxW, pPxH);
-  ctx.fillRect(ox + (AI_RIGHT - PADDLE_W) * cw, oy + (aiY - PADDLE_H / 2) * ch, pPxW, pPxH);
+  ctx.fillRect(ox + (AI_RIGHT - PADDLE_W) * cw, oy + (pongAI.data.aiY - PADDLE_H / 2) * ch, pPxW, pPxH);
 
   // ── Ball ──────────────────────────────────────────────────────────────────
   if (rallying) {
@@ -200,22 +298,17 @@ export const drawLevel6 = (gc: GameContext) => {
     if (ballVel.x > 0 &&
         ballPos.x + BALL_R > aiLeft &&
         ballPos.x - BALL_R < AI_RIGHT &&
-        Math.abs(ballPos.y - aiY) < PADDLE_H / 2 + BALL_R) {
+        Math.abs(ballPos.y - pongAI.data.aiY) < PADDLE_H / 2 + BALL_R) {
       const newSpeed = Math.min(SPEED_MAX, Math.abs(ballVel.x) * 1.05);
-      const deflect  = ((ballPos.y - aiY) / (PADDLE_H / 2)) * 0.65;
+      const deflect  = ((ballPos.y - pongAI.data.aiY) / (PADDLE_H / 2)) * 0.65;
       ballPos = new Vec2(aiLeft - BALL_R, ballPos.y);
       ballVel = new Vec2(-newSpeed, deflect);
     }
 
-    // AI tracking — smoothly lerps toward target with imperfection
-    // Only update target when ball is heading toward AI
-    if (ballVel.x > 0) {
-      aiTargetY = ballPos.y + (Math.random() - 0.5) * 0.10;
-    }
-    const diff = aiTargetY - aiY;
-    const maxStep = AI_SPEED * dt;
-    aiY += Math.sign(diff) * Math.min(Math.abs(diff) * AI_LERP * dt, maxStep);
-    aiY  = Math.max(PADDLE_H / 2, Math.min(1 - PADDLE_H / 2, aiY));
+    // ── Wolfie2D StateMachine AI update ──────────────────────────────────
+    pongAI.data.ballPos = ballPos;
+    pongAI.data.ballVel = ballVel;
+    pongAI.update(dt);
 
     // Scoring
     if (ballPos.x < 0) {

@@ -33,8 +33,7 @@ export const drawLevelSelect = (gc: GameContext) => {
     const ty  = gridY + row * (tileH + vGap);
     const lvl = i + 1;
 
-    // Levels 10-20 are stubs; 1-9 and 21-30 are fully implemented
-    const isWip = lvl >= 10 && lvl <= 20;
+    const isWip = false;
 
     ctx.strokeStyle  = isWip ? t.divider : t.stroke;
     ctx.lineWidth    = isWip ? 1 : 2.5;
@@ -49,7 +48,7 @@ export const drawLevelSelect = (gc: GameContext) => {
 
     ctx.font      = `9px ${bodyFont}`;
     ctx.fillStyle = t.fgDim;
-    ctx.fillText(isWip ? "soon" : `Q.${lvl}`, tx + tileW / 2, ty + tileH * 0.76);
+    ctx.fillText(`Q.${lvl}`, tx + tileW / 2, ty + tileH * 0.76);
 
     const captured = lvl;
     gc.hitAreas.push({

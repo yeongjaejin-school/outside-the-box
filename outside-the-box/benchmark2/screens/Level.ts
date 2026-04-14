@@ -11,6 +11,7 @@ import { drawLevel6 }     from '../levels/Level6';
 import { drawLevel7 }     from '../levels/Level7';
 import { drawLevel8 }     from '../levels/Level8';
 import { drawLevel9 }     from '../levels/Level9';
+import { drawLevel10 }    from '../levels/Level10';
 import { drawLevel21 }    from '../levels/Level21';
 import { drawLevel22 }    from '../levels/Level22';
 import { drawLevel23 }    from '../levels/Level23';
@@ -88,6 +89,13 @@ export const drawLevel = (gc: GameContext) => {
   // Level 9 — calculus trick (answer is Q.9 label)
   if (lvl === 9) {
     drawLevel9(gc);
+    drawLevelHUD(gc);
+    return;
+  }
+
+  // Level 10 — maze
+  if (lvl === 10) {
+    drawLevel10(gc);
     drawLevelHUD(gc);
     return;
   }
