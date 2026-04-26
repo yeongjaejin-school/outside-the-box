@@ -94,6 +94,7 @@ window.onload = () => {
     resetMovementLevel: () => {},
     submitMovementAnswer: () => {},
     getCurrentAnswer: () => "",
+    getAnswerPreview: () => "",
     displayFont: `"Trebuchet MS", "Verdana", sans-serif`,
     bodyFont: `"Trebuchet MS", "Arial", sans-serif`,
     logo: new Image(),
@@ -114,6 +115,8 @@ window.onload = () => {
     quizAnswer: MOVEMENT_LEVEL_CONFIG[11].answer,
     timeLeftSeconds: MOVEMENT_LEVEL_CONFIG[11].time,
   };
+
+  player.setSoundManager(gc.sounds);
 
   const isMovementLevel = (level: number) => level >= 11 && level <= 20;
 
@@ -163,7 +166,7 @@ window.onload = () => {
         case "invisible":
           return new InvisibleBlock(blockX, blockY, size, block.value);
         case "countdown":
-          return new CountdownNumberBlock(blockX, blockY, size, block.value);
+          return new CountdownNumberBlock(blockX, blockY, size, block.value, gc.sounds);
         case "heavy":
           return new HeavyBlock(blockX, blockY, size, block.value);
         case "glass":
@@ -216,6 +219,10 @@ window.onload = () => {
     return answer;
   };
 
+  gc.getAnswerPreview = () => gc.answerSlots
+    .map((slot) => slot.block?.value ?? "_")
+    .join("");
+
   gc.resetPlayerName = () => {
     gc.state.playerName = "Box";
     gc.state.nameInput = "";
@@ -239,6 +246,7 @@ window.onload = () => {
     const config = MOVEMENT_LEVEL_CONFIG[gc.state.currentLevel] ?? MOVEMENT_LEVEL_CONFIG[11];
 
     if (currentAnswer !== gc.quizAnswer) {
+      gc.sounds.play("wrongAnswer", { volume: 0.55 });
       gc.loseLife();
       needsMovementReset = true;
       gc.timeLeftSeconds = config.time;
@@ -248,6 +256,7 @@ window.onload = () => {
       return;
     }
 
+    gc.sounds.play("correctAnswer", { volume: 0.55 });
     if (gc.state.currentLevel < 20) {
       gc.state.currentLevel++;
       needsMovementReset = true;
@@ -288,6 +297,12 @@ window.onload = () => {
       movementLevelActive && (previousScreen !== "level" || previousLevel !== gc.state.currentLevel);
 
     if (movementLevelActive) {
+      if (gc.state.movementIntroSeen) {
+        gc.sounds.play("bgmMovement", { loop: true, volume: 0.3, restart: false });
+      } else {
+        gc.sounds.stop("bgmMovement");
+      }
+
       if (enteringMovementLevel) {
         const config = MOVEMENT_LEVEL_CONFIG[gc.state.currentLevel] ?? MOVEMENT_LEVEL_CONFIG[11];
         gc.timeLeftSeconds = config.time;
@@ -298,6 +313,7 @@ window.onload = () => {
       syncMovementScene(enteringMovementLevel || gc.blocks.length === 0 || needsMovementReset);
       needsMovementReset = false;
     } else {
+      gc.sounds.stop("bgmMovement");
       gc.blocks = [];
       gc.answerSlots = [];
       player.setBlocks([]);

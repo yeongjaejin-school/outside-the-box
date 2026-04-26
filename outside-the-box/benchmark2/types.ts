@@ -94,6 +94,7 @@ export interface GameContext {
   resetMovementLevel: () => void;
   submitMovementAnswer: () => void;
   getCurrentAnswer: () => string;
+  getAnswerPreview: () => string;
   displayFont: string;
   bodyFont: string;
   logo: HTMLImageElement;

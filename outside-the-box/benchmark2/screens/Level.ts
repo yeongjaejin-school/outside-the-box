@@ -58,10 +58,14 @@ const drawMovementLevelNavigation = (gc: GameContext) => {
 };
 
 const drawAnswerZone = (gc: GameContext) => {
-  const { ctx } = gc;
+  const { ctx, state } = gc;
+  const slotStroke = state.darkMode ? "rgba(255,255,255,0.92)" : "rgba(40,40,40,0.82)";
+  const slotFill = state.darkMode ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.72)";
 
   for (const slot of gc.answerSlots) {
-    ctx.strokeStyle = "rgba(255,255,255,0.92)";
+    ctx.fillStyle = slotFill;
+    ctx.fillRect(slot.x, slot.y, slot.size, slot.size);
+    ctx.strokeStyle = slotStroke;
     ctx.lineWidth = 2;
     ctx.setLineDash([4, 4]);
     ctx.strokeRect(slot.x, slot.y, slot.size, slot.size);

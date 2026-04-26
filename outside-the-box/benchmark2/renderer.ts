@@ -78,7 +78,7 @@ export const drawBottomPanel = (gc: GameContext) => {
   if (isMovementLevel) {
     const movementLayout = getMovementLayout(ctx);
     const t = getTheme(state);
-    const currentAnswer = gc.getCurrentAnswer() || "(empty)";
+    const currentAnswer = gc.getAnswerPreview();
     const timerText = `${String(gc.timeLeftSeconds).padStart(2, "0")}s`;
     const timerColor = gc.timeLeftSeconds < 10 ? "#ff5252" : t.fgMid;
     const submitW = 160;

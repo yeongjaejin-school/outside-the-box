@@ -1,14 +1,17 @@
 import { assertNumericBlockValue, Block } from "./Block";
+import type { SoundManager } from "../../audio";
 
 export class CountdownNumberBlock extends Block {
     private numericValue: number;
     private blinkVisible = true;
     private blinkAccumulator = 0;
+    private readonly soundManager: SoundManager | null;
 
-    constructor(x: number, y: number, size: number, value: string | number) {
+    constructor(x: number, y: number, size: number, value: string | number, soundManager: SoundManager | null = null) {
         const normalizedValue = assertNumericBlockValue(value);
         super("countdown", x, y, size, "#f4a340", normalizedValue);
         this.numericValue = normalizedValue;
+        this.soundManager = soundManager;
     }
 
     public override update(deltaSeconds: number, blocks: Block[]) {
@@ -58,6 +61,7 @@ export class CountdownNumberBlock extends Block {
         const centerX = this.x + this.size / 2;
         const centerY = this.y + this.size / 2;
 
+        this.soundManager?.play("boom", { volume: 0.55 });
         this.destroy();
 
         for (const block of blocks) {

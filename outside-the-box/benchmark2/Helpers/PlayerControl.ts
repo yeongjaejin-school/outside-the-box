@@ -3,6 +3,7 @@ import { EventEmitter } from "./Events/EventEmitter";
 import { GameEvent, MoveEventPayload } from "./Events/Event.ts";
 import { Block } from "./objects/Block";
 import type { AnswerSlotEntity } from "../types";
+import type { SoundManager } from "../audio";
 
 type Direction = "up" | "down" | "left" | "right";
 
@@ -39,6 +40,7 @@ export class PlayerControl extends EventListener {
     private answerSlots: AnswerSlotEntity[] = [];
     private heldBlock: Block | null = null;
     private afterimages: Afterimage[] = [];
+    private soundManager: SoundManager | null = null;
 
     constructor(emitter: EventEmitter) {
         super(emitter);
@@ -120,6 +122,10 @@ export class PlayerControl extends EventListener {
         this.answerSlots = slots;
     }
 
+    public setSoundManager(soundManager: SoundManager) {
+        this.soundManager = soundManager;
+    }
+
     public resetPosition(x: number, y: number, direction: Direction = "down") {
         if (this.heldBlock) {
             this.detachHeldBlock();
@@ -194,6 +200,7 @@ export class PlayerControl extends EventListener {
         }
 
         this.spawnDashAfterimages(startX, startY, dx, dy);
+        this.soundManager?.play("dash", { volume: 0.45 });
         this.x = candidateX;
         this.y = candidateY;
     }
