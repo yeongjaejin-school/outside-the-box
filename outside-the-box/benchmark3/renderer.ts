@@ -152,42 +152,27 @@ export const drawBottomPanel = (gc: GameContext) => {
 
   const panelCY = bottomBoxY + bottomBoxHeight / 2;
   const robotCX = contentX + contentWidth * 0.07;
-  const headW = 50;
-  const headH = 42;
-  const headX = robotCX - headW / 2;
-  const headY = panelCY - headH / 2 - 6;
+  const spriteSize = Math.min(bottomBoxHeight * 0.75, 56);
+  const charX = robotCX + gc.guideCharOffsetX;
+  const charY = panelCY - spriteSize / 2 + gc.guideCharOffsetY;
 
-  ctx.strokeStyle = t.stroke;
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(robotCX, headY);
-  ctx.lineTo(robotCX, headY - 11);
-  ctx.stroke();
-  ctx.fillStyle = t.fg;
-  ctx.beginPath();
-  ctx.arc(robotCX, headY - 15, 4, 0, Math.PI * 2);
-  ctx.fill();
+  const dirSprites: Record<string, { img: HTMLImageElement; loaded: boolean }> = {
+    down:  { img: gc.playerDownImg,  loaded: gc.playerDownLoaded },
+    up:    { img: gc.playerUpImg,    loaded: gc.playerUpLoaded },
+    left:  { img: gc.playerLeftImg,  loaded: gc.playerLeftLoaded },
+    right: { img: gc.playerRightImg, loaded: gc.playerRightLoaded },
+  };
+  const { img: spriteImg, loaded: spriteLoaded } = dirSprites[gc.guideCharDir] ?? dirSprites.down;
 
-  ctx.strokeStyle = t.stroke;
-  ctx.lineWidth = 2;
-  ctx.strokeRect(headX, headY, headW, headH);
-
-  const eyeY = headY + headH * 0.28;
-  ctx.fillStyle = state.darkMode ? "#88bbff" : "#3366cc";
-  ctx.fillRect(headX + headW * 0.16, eyeY, 11, 9);
-  ctx.fillRect(headX + headW * 0.56, eyeY, 11, 9);
-
-  const mouthY = headY + headH * 0.65;
-  ctx.fillStyle = t.fgDim;
-  for (let i = 0; i < 5; i++) {
-    ctx.fillRect(headX + headW * 0.13 + i * 8, mouthY, 5, 5);
+  if (spriteLoaded) {
+    ctx.drawImage(spriteImg, charX - spriteSize / 2, charY, spriteSize, spriteSize);
   }
 
   ctx.fillStyle = t.fgDim;
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
   ctx.font = `bold 9px ${displayFont}`;
-  ctx.fillText("EXAM  GUIDE", robotCX, headY + headH + 7, headW + 16);
+  ctx.fillText("EXAM  GUIDE", charX, charY + spriteSize + 4, spriteSize + 16);
 
   const divX = contentX + contentWidth * 0.155;
   ctx.strokeStyle = t.divider;
@@ -322,7 +307,7 @@ export const drawLevelHUD = (gc: GameContext) => {
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
   ctx.font = `bold 26px ${displayFont}`;
-  ctx.fillText(`Q.${state.currentLevel}`, topBoxX + padX, topBoxY + padY);
+  ctx.fillText(state.currentLevel === 3 ? `Q${state.currentLevel}` : `Q.${state.currentLevel}`, topBoxX + padX, topBoxY + padY);
 
   const pauseSize = padY * 1.6;
   const pauseX = topBoxX + topBoxWidth - padX - pauseSize;
@@ -355,63 +340,121 @@ export const drawLevelHUD = (gc: GameContext) => {
     },
   });
 
-  const skipsUnlocked = state.currentLevel >= 9;
   const heartSize = 36;
-  const heartGap = 8;
-  const livesY = topBoxY + topBoxHeight - (skipsUnlocked ? padY * 3.2 : padY * 1.2) - heartSize / 2;
-  const totalHW = 3 * heartSize + 2 * heartGap;
-  const livesX = topBoxX + topBoxWidth - padX - totalHW;
+  const heartGap  = 8;
+  const totalHW   = 3 * heartSize + 2 * heartGap;
+  const livesX    = topBoxX + topBoxWidth - padX - totalHW;
+  const livesY    = topBoxY + topBoxHeight - padY * 1.2 - heartSize / 2;
 
   for (let i = 0; i < 3; i++) {
-    const img = i < state.lives ? gc.heartImg : gc.lostHeartImg;
+    const img    = i < state.lives ? gc.heartImg    : gc.lostHeartImg;
     const loaded = i < state.lives ? gc.heartLoaded : gc.lostHeartLoaded;
-    const sx = i < state.lives ? 274 : 343;
-    const sy = i < state.lives ? 0   : 55;
+    const sx = i < state.lives ? 274  : 343;
+    const sy = i < state.lives ? 0    : 55;
     const sw = i < state.lives ? 1011 : 856;
     const sh = i < state.lives ? 864  : 821;
     const hx = livesX + i * (heartSize + heartGap);
     if (loaded) {
       ctx.drawImage(img, sx, sy, sw, sh, hx, livesY, heartSize, heartSize);
     } else {
-      ctx.fillStyle = i < state.lives ? "#e03030" : state.darkMode ? "#444444" : "#bbbbbb";
-      ctx.font = `${heartSize}px sans-serif`;
+      ctx.fillStyle    = i < state.lives ? "#e03030" : state.darkMode ? "#444444" : "#bbbbbb";
+      ctx.font         = `${heartSize}px sans-serif`;
       ctx.textBaseline = "top";
-      ctx.textAlign = "left";
+      ctx.textAlign    = "left";
       ctx.fillText("\u2665", hx, livesY);
     }
   }
+};
 
-  if (skipsUnlocked) {
-    const skipsY = topBoxY + topBoxHeight - padY * 1.2;
-    const skipsW = 110;
-    const skipsH = 28;
-    const skipsX = topBoxX + topBoxWidth - padX - skipsW;
-    const canSkip = isSkippable(state.currentLevel) && state.skips > 0;
-    const skipLabel = `SKIP  x${state.skips}`;
+export const drawCheatsButton = (gc: GameContext) => {
+  const { ctx, state, displayFont } = gc;
+  const lvl = state.currentLevel;
+  const isMovement = lvl >= 11 && lvl <= 20;
 
-    ctx.strokeStyle = canSkip ? t.stroke : t.divider;
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(skipsX, skipsY - skipsH / 2, skipsW, skipsH);
-    ctx.fillStyle = canSkip ? t.fg : t.fgDim;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.font = `bold 13px ${displayFont}`;
-    ctx.fillText(skipLabel, skipsX + skipsW / 2, skipsY, skipsW - 8);
-
-    if (canSkip) {
-      gc.hitAreas.push({
-        x: skipsX,
-        y: skipsY - skipsH / 2,
-        w: skipsW,
-        h: skipsH,
-        action: () => {
-          state.skips--;
-          state.levelSubPhase = "";
-          state.levelTimerEnd = 0;
-          state.currentLevel++;
-          gc.render();
-        },
-      });
-    }
+  let btnX: number, btnY: number;
+  if (isMovement) {
+    const ml = getMovementLayout(ctx);
+    btnX = ml.gameFrameX;
+    btnY = ml.gameFrameY - 30;
+  } else {
+    const { topBoxX, topBoxY } = getLayout(ctx);
+    btnX = topBoxX;
+    btnY = topBoxY - 30;
   }
+
+  const btnW = 84;
+  const btnH = 24;
+
+  const hover = gc.mouseX >= btnX && gc.mouseX <= btnX + btnW &&
+                gc.mouseY >= btnY && gc.mouseY <= btnY + btnH;
+
+  ctx.fillStyle   = hover ? "#f0cc28" : "#d4b820";
+  ctx.fillRect(btnX, btnY, btnW, btnH);
+  ctx.strokeStyle = "#7a6400";
+  ctx.lineWidth   = 1.5;
+  ctx.strokeRect(btnX, btnY, btnW, btnH);
+
+  ctx.fillStyle    = "#1a1200";
+  ctx.textAlign    = "center";
+  ctx.textBaseline = "middle";
+  ctx.font         = `bold 12px ${displayFont}`;
+  ctx.fillText("CHEATS", btnX + btnW / 2, btnY + btnH / 2);
+
+  gc.hitAreas.push({
+    x: btnX, y: btnY, w: btnW, h: btnH,
+    action: () => {
+      state.cheatsPopupOpen = !state.cheatsPopupOpen;
+      gc.render();
+    },
+  });
+};
+
+export const drawExamTimer = (gc: GameContext) => {
+  const { ctx, state, displayFont } = gc;
+  const lvl = state.currentLevel;
+  const isMovement = lvl >= 11 && lvl <= 20;
+
+  // Position top-right above the play area (mirrored from cheats button on the left)
+  let rightEdge: number, btnY: number;
+  if (isMovement) {
+    const ml = getMovementLayout(ctx);
+    rightEdge = ml.gameFrameX + ml.gameFrameWidth;
+    btnY = ml.gameFrameY - 30;
+  } else {
+    const { topBoxX, topBoxY, topBoxWidth } = getLayout(ctx);
+    rightEdge = topBoxX + topBoxWidth;
+    btnY = topBoxY - 30;
+  }
+
+  const elapsedMs = performance.now() - state.examStartTime;
+  const totalSeconds = Math.floor(elapsedMs / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  const label = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+
+  // Color tiers: gold < 12 min, silver 12–15 min, bronze 15+ min
+  let timerColor: string;
+  if (minutes < 12) {
+    timerColor = "#d4b820"; // gold
+  } else if (minutes < 15) {
+    timerColor = "#a8b8c0"; // silver
+  } else {
+    timerColor = "#cd7f32"; // bronze
+  }
+
+  const btnW = 84;
+  const btnH = 24;
+  const btnX = rightEdge - btnW;
+
+  ctx.fillStyle   = "rgba(0,0,0,0.55)";
+  ctx.fillRect(btnX, btnY, btnW, btnH);
+  ctx.strokeStyle = timerColor;
+  ctx.lineWidth   = 1.5;
+  ctx.strokeRect(btnX, btnY, btnW, btnH);
+
+  ctx.fillStyle    = timerColor;
+  ctx.textAlign    = "center";
+  ctx.textBaseline = "middle";
+  ctx.font         = `bold 13px ${displayFont}`;
+  ctx.fillText(label, btnX + btnW / 2, btnY + btnH / 2);
 };

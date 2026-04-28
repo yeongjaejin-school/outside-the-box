@@ -139,6 +139,7 @@ interface Maze25Data {
   half:     number;
   won:      boolean;
   onWin:    () => void;
+  onHitWall: () => void;
   histX:    Float32Array;
   histY:    Float32Array;
   histIdx:  number;
@@ -174,6 +175,7 @@ class Walk25State extends State {
       const ri = ((d.histIdx - setback) % HIST_LEN25 + HIST_LEN25) % HIST_LEN25;
       d.pos.x = d.histX[ri];
       d.pos.y = d.histY[ri];
+      d.onHitWall();
     }
 
     if (d.pos.y < 0.9) this.finished('win');
@@ -230,7 +232,7 @@ export const drawLevel25 = (gc: GameContext) => {
     ctx.fillStyle = t.fgMid;
     ctx.fillText('You saw through the illusion.', cx, topBoxY + topBoxHeight * 0.50);
     drawButton(gc, 'CONTINUE  →', cx - 100, topBoxY + topBoxHeight * 0.65, 200, 48, () => {
-      state.currentLevel  = 26;
+      state.currentLevel  = 30;
       state.levelSubPhase = '';
       gc.render();
     });
@@ -250,6 +252,7 @@ export const drawLevel25 = (gc: GameContext) => {
       half:     PLAYER_HALF25,
       won:      false,
       onWin:    () => { state.levelSubPhase = 'win'; },
+      onHitWall: () => { gc.sounds.play("mazeOof", { volume: 0.65 }); },
       histX,
       histY,
       histIdx:  0,

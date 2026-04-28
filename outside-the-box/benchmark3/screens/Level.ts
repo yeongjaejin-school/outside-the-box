@@ -149,29 +149,26 @@ export const drawLevel = (gc: GameContext) => {
     ctx.lineWidth = 3;
     ctx.strokeRect(px, py, pw, ph);
 
-    // ── Robot avatar ────────────────────────────────────────────────────────
+    // ── Player sprite avatar ─────────────────────────────────────────────────
     const robotCX = px + pw * 0.12;
-    const robotCY = py + ph * 0.22;
-    const headW = 48; const headH = 40;
-    const headX = robotCX - headW / 2;
-    const headY = robotCY - headH / 2;
-
-    ctx.strokeStyle = t.stroke; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(robotCX, headY); ctx.lineTo(robotCX, headY - 10); ctx.stroke();
-    ctx.fillStyle = t.fg;
-    ctx.beginPath(); ctx.arc(robotCX, headY - 14, 4, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = t.stroke; ctx.lineWidth = 2;
-    ctx.strokeRect(headX, headY, headW, headH);
-    const eyeY = headY + headH * 0.28;
-    ctx.fillStyle = state.darkMode ? "#88bbff" : "#3366cc";
-    ctx.fillRect(headX + headW * 0.16, eyeY, 10, 8);
-    ctx.fillRect(headX + headW * 0.56, eyeY, 10, 8);
-    const mouthY = headY + headH * 0.65;
+    const spriteSize = 56;
+    const spriteX = robotCX - spriteSize / 2;
+    const spriteY = py + ph * 0.12;
+    const dirSpritesIntro = {
+      down:  { img: gc.playerDownImg,  loaded: gc.playerDownLoaded },
+      up:    { img: gc.playerUpImg,    loaded: gc.playerUpLoaded },
+      left:  { img: gc.playerLeftImg,  loaded: gc.playerLeftLoaded },
+      right: { img: gc.playerRightImg, loaded: gc.playerRightLoaded },
+    };
+    const { img: introSpriteImg, loaded: introSpriteLoaded } = dirSpritesIntro[gc.guideCharDir] ?? dirSpritesIntro.down;
+    if (introSpriteLoaded) {
+      ctx.drawImage(introSpriteImg, spriteX, spriteY, spriteSize, spriteSize);
+    }
     ctx.fillStyle = t.fgDim;
-    for (let i = 0; i < 5; i++) ctx.fillRect(headX + headW * 0.13 + i * 8, mouthY, 5, 4);
-    ctx.fillStyle = t.fgDim; ctx.font = `bold 8px ${displayFont}`;
-    ctx.textAlign = "center"; ctx.textBaseline = "top";
-    ctx.fillText("EXAM  GUIDE", robotCX, headY + headH + 5);
+    ctx.font = `bold 8px ${displayFont}`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.fillText("EXAM  GUIDE", robotCX, spriteY + spriteSize + 4);
 
     // ── Guide speech ────────────────────────────────────────────────────────
     const speechX = px + pw * 0.22;
@@ -275,29 +272,26 @@ export const drawLevel = (gc: GameContext) => {
     ctx.lineWidth = 3;
     ctx.strokeRect(px, py, pw, ph);
 
-    // Robot avatar
+    // Player sprite avatar
     const robotCX = px + pw * 0.12;
-    const robotCY = py + ph * 0.28;
-    const headW = 48; const headH = 40;
-    const headX = robotCX - headW / 2;
-    const headY = robotCY - headH / 2;
-
-    ctx.strokeStyle = t.stroke; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(robotCX, headY); ctx.lineTo(robotCX, headY - 10); ctx.stroke();
-    ctx.fillStyle = t.fg;
-    ctx.beginPath(); ctx.arc(robotCX, headY - 14, 4, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = t.stroke; ctx.lineWidth = 2;
-    ctx.strokeRect(headX, headY, headW, headH);
-    const eyeY21 = headY + headH * 0.28;
-    ctx.fillStyle = state.darkMode ? "#88bbff" : "#3366cc";
-    ctx.fillRect(headX + headW * 0.16, eyeY21, 10, 8);
-    ctx.fillRect(headX + headW * 0.56, eyeY21, 10, 8);
-    const mouthY21 = headY + headH * 0.65;
+    const spriteSize21 = 56;
+    const spriteX21 = robotCX - spriteSize21 / 2;
+    const spriteY21 = py + ph * 0.12;
+    const dirSprites21 = {
+      down:  { img: gc.playerDownImg,  loaded: gc.playerDownLoaded },
+      up:    { img: gc.playerUpImg,    loaded: gc.playerUpLoaded },
+      left:  { img: gc.playerLeftImg,  loaded: gc.playerLeftLoaded },
+      right: { img: gc.playerRightImg, loaded: gc.playerRightLoaded },
+    };
+    const { img: sprite21Img, loaded: sprite21Loaded } = dirSprites21[gc.guideCharDir] ?? dirSprites21.down;
+    if (sprite21Loaded) {
+      ctx.drawImage(sprite21Img, spriteX21, spriteY21, spriteSize21, spriteSize21);
+    }
     ctx.fillStyle = t.fgDim;
-    for (let i = 0; i < 5; i++) ctx.fillRect(headX + headW * 0.13 + i * 8, mouthY21, 5, 4);
-    ctx.fillStyle = t.fgDim; ctx.font = `bold 8px ${displayFont}`;
-    ctx.textAlign = "center"; ctx.textBaseline = "top";
-    ctx.fillText("EXAM  GUIDE", robotCX, headY + headH + 5);
+    ctx.font = `bold 8px ${displayFont}`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    ctx.fillText("EXAM  GUIDE", robotCX, spriteY21 + spriteSize21 + 4);
 
     // Speech
     const speechX21 = px + pw * 0.22;
@@ -338,7 +332,14 @@ export const drawLevel = (gc: GameContext) => {
   if (lvl === 27) { drawLevel27(gc); drawLevelHUD(gc); return; }
   if (lvl === 28) { drawLevel28(gc); drawLevelHUD(gc); return; }
   if (lvl === 29) { drawLevel29(gc); drawLevelHUD(gc); return; }
-  if (lvl === 30) { drawLevel30(gc); drawLevelHUD(gc); return; }
+  if (lvl === 30) {
+    drawLevel30(gc);
+    // No HUD on the win/certificate screens — clean slate
+    if (state.levelSubPhase !== 'certificate' && state.levelSubPhase !== 'win') {
+      drawLevelHUD(gc);
+    }
+    return;
+  }
 
   ctx.fillStyle = t.fg;
   ctx.textAlign = "center";

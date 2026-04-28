@@ -115,6 +115,7 @@ interface MazeData {
   half:     number;
   won:      boolean;
   onWin:    () => void;
+  onHitWall: () => void;
   // Rolling position history for setback-on-hit
   histX:    Float32Array;
   histY:    Float32Array;
@@ -154,6 +155,7 @@ class MazeWalkState extends State {
       const ri = ((d.histIdx - setback) % HIST_LEN + HIST_LEN) % HIST_LEN;
       d.pos.x = d.histX[ri];
       d.pos.y = d.histY[ri];
+      d.onHitWall();
     }
 
     // ── Win: reached top exit door ───────────────────────────────────────────
@@ -235,6 +237,7 @@ export const drawLevel10 = (gc: GameContext) => {
       half:     PLAYER_HALF,
       won:      false,
       onWin:    () => { state.levelSubPhase = 'win'; },
+      onHitWall: () => { gc.sounds.play("mazeOof", { volume: 0.65 }); },
       histX,
       histY,
       histIdx:  0,

@@ -1,7 +1,6 @@
 import { GameContext } from '../types';
 import { getTheme }    from '../theme';
 import { getLayout }   from '../layout';
-import { drawButton }  from '../renderer';
 
 export const drawLevel9 = (gc: GameContext) => {
   const { ctx, state, displayFont, bodyFont } = gc;
@@ -9,75 +8,52 @@ export const drawLevel9 = (gc: GameContext) => {
   const t  = getTheme(state);
   const cx = w / 2;
 
-  // ── Integral notation  ∫₀³ x√(9−x²) dx ──────────────────────────────────
-  // Expression approximate total pixel width: ~250px (fixed-px fonts)
-  // Place the integral sign right-edge at cx - 88 so the whole expr is centered
+  // Integral: (x-1)^2 from 1 to 4
+  // Answer is 9 via u-sub: [(x-1)^3 / 3] from 1 to 4 = 27/3 - 0 = 9
+  // The number 9 never appears in the expression itself.
   const integralCY = topBoxY + topBoxHeight * 0.40;
-  const integralX  = cx - 88;
+  const integralX  = cx - 70;
 
-  // large ∫ sign
+  // large integral sign
   ctx.fillStyle    = t.fg;
   ctx.font         = `88px serif`;
   ctx.textAlign    = "right";
   ctx.textBaseline = "middle";
-  ctx.fillText("∫", integralX, integralCY + topBoxHeight * 0.015);
+  ctx.fillText("\u222b", integralX, integralCY + topBoxHeight * 0.015);
 
-  // upper bound — 3
+  // upper bound: 4
   ctx.font         = `bold 20px ${displayFont}`;
   ctx.textAlign    = "left";
   ctx.textBaseline = "bottom";
-  ctx.fillText("3", integralX + 2, integralCY - topBoxHeight * 0.085);
+  ctx.fillText("4", integralX + 2, integralCY - topBoxHeight * 0.085);
 
-  // lower bound — 0
+  // lower bound: 1
   ctx.textBaseline = "top";
-  ctx.fillText("0", integralX - 4, integralCY + topBoxHeight * 0.085);
+  ctx.fillText("1", integralX - 4, integralCY + topBoxHeight * 0.085);
 
-  // integrand — x
+  // integrand: (x-1)^2
   const exprX = integralX + 8;
   ctx.font         = `bold 32px serif`;
   ctx.textBaseline = "middle";
   ctx.textAlign    = "left";
-  ctx.fillText("x", exprX, integralCY);
-
-  // square root — draw radical sign then radicand
-  const radStartX = exprX + 24;
-  const radBaseY  = integralCY + 16;
-  const radTopY   = integralCY - 22;
-  const radicandW = 92;
-
-  ctx.strokeStyle = t.fg;
-  ctx.lineWidth   = 2;
-  ctx.beginPath();
-  ctx.moveTo(radStartX,              radBaseY);
-  ctx.lineTo(radStartX + 10,         radBaseY + 8);
-  ctx.lineTo(radStartX + 18,         radTopY);
-  ctx.lineTo(radStartX + 18 + radicandW, radTopY);
-  ctx.stroke();
-
-  // radicand — 9 − x
-  ctx.fillStyle    = t.fg;
-  ctx.font         = `bold 26px serif`;
-  ctx.textAlign    = "left";
-  ctx.textBaseline = "middle";
-  const radicandX  = radStartX + 22;
-  ctx.fillText("9 \u2212 x", radicandX, integralCY);
+  ctx.fillText("(x\u22121)", exprX, integralCY);
 
   // superscript 2
-  ctx.font         = `bold 16px serif`;
+  ctx.font         = `bold 18px serif`;
   ctx.textBaseline = "top";
-  ctx.fillText("2", radicandX + 66, integralCY - 18);
+  ctx.fillText("2", exprX + 82, integralCY - 20);
 
   // dx
   ctx.font         = `bold 32px serif`;
   ctx.textBaseline = "middle";
   ctx.textAlign    = "left";
-  ctx.fillText(" dx", radStartX + 18 + radicandW + 2, integralCY);
+  ctx.fillText(" dx", exprX + 100, integralCY);
 
-  // ── Answer buttons ────────────────────────────────────────────────────────
-  // 27 — forgot /3 in integration step
-  // 18 — forgot the 1/2 from x dx = -du/2
-  //  0 — didn't flip bounds after removing the negative
-  //  6 — skipped u-sub, evaluated integrand directly
+  // Answer buttons — all wrong; correct answer (9) is not shown here.
+  // 27: forgot to divide by 3, used [(x-1)^3] = 27
+  // 18: doubled result from a symmetry assumption
+  //  0: treated it like an odd function that cancels (wrong, it's a square)
+  //  6: differentiated instead: 2(x-1) at x=4 gives 6
   const options   = ["27", "18", "0", "6"];
   const btnW      = topBoxWidth * 0.17;
   const btnH      = topBoxHeight * 0.15;
@@ -88,12 +64,25 @@ export const drawLevel9 = (gc: GameContext) => {
 
   for (let i = 0; i < options.length; i++) {
     const bx = btnStartX + i * (btnW + btnGap);
-    drawButton(gc, options[i], bx, btnY, btnW, btnH, () => {
-      gc.loseLife();
-    }, 28);
+
+    if (gc.levelBGLoaded) {
+      ctx.drawImage(gc.levelBGImg, 326, 132, 888, 810, bx, btnY, btnW, btnH);
+    } else {
+      ctx.strokeStyle = t.stroke;
+      ctx.lineWidth   = 2;
+      ctx.strokeRect(bx, btnY, btnW, btnH);
+    }
+
+    ctx.fillStyle    = "#1a1a1a";
+    ctx.textAlign    = "center";
+    ctx.textBaseline = "middle";
+    ctx.font         = `bold 28px serif`;
+    ctx.fillText(options[i], bx + btnW / 2, btnY + btnH / 2);
+
+    gc.hitAreas.push({ x: bx, y: btnY, w: btnW, h: btnH, action: () => gc.loseLife() });
   }
 
-  // ── Secret hit area: the "Q.9" label drawn by drawLevelHUD ───────────────
+  // Secret hit area: clicking the "Q.9" label drawn by drawLevelHUD advances the level
   const padX    = topBoxWidth  * 0.05;
   const padY    = topBoxHeight * 0.08;
   const labelCX = topBoxX + padX;

@@ -87,6 +87,13 @@ export const drawLevel7 = (gc: GameContext) => {
     isDragging = false;
   }
 
+  // Eraser audio — loop while dragging, stop when released
+  if (isDragging) {
+    gc.sounds.play("eraser", { loop: true, volume: 0.5, restart: false });
+  } else {
+    gc.sounds.stop("eraser");
+  }
+
 
   // ── Draw chalkboard ───────────────────────────────────────────────────────
   ctx.fillStyle = "#1b3320";
@@ -166,11 +173,6 @@ export const drawLevel7 = (gc: GameContext) => {
   ctx.moveTo(eraserX + 10, eraserY); ctx.lineTo(eraserX + 10, eraserY + ERASER_H);
   ctx.moveTo(eraserX + 20, eraserY); ctx.lineTo(eraserX + 20, eraserY + ERASER_H);
   ctx.stroke();
-  ctx.fillStyle    = "#774444";
-  ctx.font         = `bold 7px sans-serif`;
-  ctx.textAlign    = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("ERASER", eraserX + ERASER_W / 2 + 4, eraserY + ERASER_H / 2);
 
   // Live count of F's still visible on the board
   const remainingFs = LETTERS.filter((l, i) => l.char === 'F' && !erasedSet.has(i)).length;

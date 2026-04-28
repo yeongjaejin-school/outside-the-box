@@ -16,15 +16,6 @@ export const drawNameEntry = (gc: GameContext) => {
   ctx.font = `bold 32px ${displayFont}`;
   ctx.fillText("What's your name?", cx, topBoxY + topBoxHeight * 0.2);
 
-  ctx.font = `18px ${bodyFont}`;
-  ctx.fillStyle = t.fgDim;
-  ctx.fillText(
-    "Leave it blank and we'll call you Box.",
-    cx,
-    topBoxY + topBoxHeight * 0.32,
-    topBoxWidth * 0.65,
-  );
-
   // Input box
   const inputW = topBoxWidth * 0.5;
   const inputH = 52;
@@ -94,6 +85,9 @@ export const drawNameEntry = (gc: GameContext) => {
       state.playerName = state.nameInput.trim() || "Box";
       state.nameFocused = false;
       state.currentLevel = 2;
+      if (state.playMode === "play" && state.examStartTime === 0) {
+        state.examStartTime = performance.now();
+      }
       gc.render();
     },
     20,

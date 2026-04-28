@@ -10,14 +10,15 @@ export const drawLevel3 = (gc: GameContext) => {
   const t = getTheme(state);
 
   // 2×2 grid of decoy options — all wrong
-  const cols = 2;
-  const tileW = topBoxWidth * 0.3;
-  const tileH = topBoxHeight * 0.22;
-  const hGap = topBoxWidth * 0.06;
-  const vGap = topBoxHeight * 0.06;
+  // levelBGImg (same crop used by the level-select tiles) is the reliable button background
+  const cols  = 2;
+  const tileW = topBoxWidth * 0.38;
+  const tileH = Math.round(topBoxHeight * 0.20);
+  const hGap  = topBoxWidth * 0.06;
+  const vGap  = topBoxHeight * 0.06;
   const gridW = cols * tileW + hGap;
   const gridX = cx - gridW / 2;
-  const gridY = topBoxY + topBoxHeight * 0.26;
+  const gridY = topBoxY + topBoxHeight * 0.18;
 
   for (let i = 0; i < 4; i++) {
     const col = i % cols;
@@ -25,40 +26,34 @@ export const drawLevel3 = (gc: GameContext) => {
     const tx = gridX + col * (tileW + hGap);
     const ty = gridY + row * (tileH + vGap);
 
-    ctx.strokeStyle = t.stroke;
-    ctx.lineWidth = 3;
-    ctx.strokeRect(tx, ty, tileW, tileH);
+    // Stone-tile button background — same crop used in the level select screen
+    if (gc.levelBGLoaded) {
+      ctx.drawImage(gc.levelBGImg, 326, 132, 888, 810, tx, ty, tileW, tileH);
+    } else {
+      ctx.strokeStyle = t.stroke;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(tx, ty, tileW, tileH);
+    }
 
-    ctx.fillStyle = t.fg;
-    ctx.textAlign = "center";
+    ctx.fillStyle    = "#1a1a1a";
+    ctx.textAlign    = "center";
     ctx.textBaseline = "middle";
 
     if (i === 0) {
-      // The word "dot"
-      ctx.font = `bold 36px ${displayFont}`;
+      ctx.font = `bold ${Math.round(tileH * 0.44)}px ${displayFont}`;
       ctx.fillText("dot", tx + tileW / 2, ty + tileH / 2);
     } else if (i === 1) {
-      // A literal dot
-      ctx.beginPath();
-      ctx.arc(tx + tileW / 2, ty + tileH / 2, 10, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.font = `bold ${Math.round(tileH * 0.30)}px ${displayFont}`;
+      ctx.fillText("Kendrick 'K-dot' Lamar", tx + tileW / 2, ty + tileH / 2, tileW - 16);
     } else if (i === 2) {
-      // Three dots
-      ctx.font = `bold 36px ${displayFont}`;
-      ctx.fillText("• • •", tx + tileW / 2, ty + tileH / 2);
+      ctx.font = `bold ${Math.round(tileH * 0.44)}px ${displayFont}`;
+      ctx.fillText("\u2022 \u2022 \u2022", tx + tileW / 2, ty + tileH / 2);
     } else {
-      // Department of Sanitation
-      ctx.font = `bold 15px ${displayFont}`;
-      ctx.fillText("Department", tx + tileW / 2, ty + tileH * 0.34, tileW - 16);
-      ctx.fillText(
-        "of Sanitation",
-        tx + tileW / 2,
-        ty + tileH * 0.57,
-        tileW - 16,
-      );
-      ctx.font = `13px ${bodyFont}`;
-      ctx.fillStyle = t.fgDim;
-      ctx.fillText("(D.O.S.)", tx + tileW / 2, ty + tileH * 0.78);
+      ctx.font = `bold ${Math.round(tileH * 0.30)}px ${displayFont}`;
+      ctx.fillText("Dept. of Technology", tx + tileW / 2, ty + tileH * 0.38, tileW - 16);
+      ctx.font = `${Math.round(tileH * 0.26)}px ${bodyFont}`;
+      ctx.fillStyle = "#444";
+      ctx.fillText("(D.O.T)", tx + tileW / 2, ty + tileH * 0.72);
     }
 
     gc.hitAreas.push({
@@ -71,22 +66,20 @@ export const drawLevel3 = (gc: GameContext) => {
   }
 
   // Hidden hit area: the tittle (dot) on the 'i' in "Click" in the bottom panel.
-  // drawBottomPanel renders guide text at 18px bodyFont, textBaseline="middle",
-  // starting at speechX = divX + contentWidth*0.025, centered vertically in the panel.
-  const contentX = frameX;
+  const contentX    = frameX;
   const contentWidth = frameW;
-  const divX = contentX + contentWidth * 0.155;
+  const divX    = contentX + contentWidth * 0.155;
   const speechX = divX + contentWidth * 0.025;
   const panelCY = bottomBoxY + bottomBoxHeight / 2;
   const lineGap = 27;
-  const startY = panelCY - lineGap / 2 + lineGap * 0.1; // 1 line only
+  const startY  = panelCY - lineGap / 2 + lineGap * 0.1;
 
   ctx.font = `18px ${bodyFont}`;
   const prefixW = ctx.measureText("Cl").width;
-  const iCharW = ctx.measureText("i").width;
-  const iDotCX = speechX + prefixW + iCharW / 2;
-  const iDotCY = startY - 6; // tittle sits above the text midline
-  const hitR = 8;
+  const iCharW  = ctx.measureText("i").width;
+  const iDotCX  = speechX + prefixW + iCharW / 2;
+  const iDotCY  = startY - 6;
+  const hitR    = 8;
 
   gc.hitAreas.push({
     x: iDotCX - hitR,

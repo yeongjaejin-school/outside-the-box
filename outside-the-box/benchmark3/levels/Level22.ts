@@ -225,6 +225,9 @@ export const drawLevel22 = (gc: GameContext) => {
         if (phase22 === 'waiting' && phaseElapsed22 >= waitSecs22) {
           phase22        = 'flash';
           phaseElapsed22 = 0;
+          // Play the first second of "All of the Lights" on every flash
+          gc.sounds.play("allOfTheLights", { loop: true, volume: 0.85, restart: true });
+          setTimeout(() => gc.sounds.stop("allOfTheLights"), 1000);
         } else if (phase22 === 'flash' && phaseElapsed22 >= FLASH_SECS) {
           phase22        = 'input';
           phaseElapsed22 = 0;

@@ -606,12 +606,11 @@ export const drawLevel2 = (gc: GameContext) => {
   }
 
   // ── Layout ────────────────────────────────────────────────────────────────
-  const PAD        = 18;
-  const BOX_TOP    = topBoxY + 44;
-  const BTN_AREA   = 68;
-  const BOX_H      = topBoxHeight - 44 - BTN_AREA - PAD;
-  const BOX_W      = topBoxWidth  - PAD * 2 - 12;   // 12 = scrollbar
-  const BOX_LEFT   = topBoxX + PAD;
+  const PAD      = 18;
+  const BOX_LEFT = topBoxX + PAD;
+  const BOX_W    = topBoxWidth * 0.76 - PAD;
+  const BOX_TOP  = topBoxY + topBoxHeight * 0.16;
+  const BOX_H    = topBoxHeight * 0.60;
   const TOTAL_H    = TOS_LINES.length * LINE_H + 20; // +20 bottom padding
   const MAX_SCROLL = Math.max(0, TOTAL_H - BOX_H);
 
@@ -678,28 +677,63 @@ export const drawLevel2 = (gc: GameContext) => {
     ctx.fillRect(SB_X, thumbY, SB_W, thumbH);
   }
 
-  // ── Buttons ───────────────────────────────────────────────────────────────
-  const BTN_Y    = BOX_TOP + BOX_H + 10;
-  const BTN_H2   = 44;
-  const CBX_SIZE = 20;
-  const CBX_X    = BOX_LEFT;
-  const CBX_Y    = BTN_Y + (BTN_H2 - CBX_SIZE) / 2;
+  // ── Buttons — left-aligned under TOS box ─────────────────────────────────
+  const BTN_W2    = Math.round(topBoxWidth * 0.11);
+  const BTN_H2    = Math.round(BTN_W2 * 0.28);
+  const BTN_GAP   = Math.round(topBoxWidth * 0.018);
+  const ACCEPT_X  = BOX_LEFT;
+  const DECLINE_X = BOX_LEFT + BTN_W2 + BTN_GAP;
+  const BTN_Y     = BOX_TOP + BOX_H + Math.round(topBoxHeight * 0.03);
+  const BTN_R     = 6;
 
-  // Checkbox — always looks normal and inviting
-  ctx.strokeStyle = state.darkMode ? "#ccc" : "#333";
-  ctx.lineWidth   = 1.5;
-  ctx.strokeRect(CBX_X, CBX_Y, CBX_SIZE, CBX_SIZE);
-  ctx.fillStyle   = state.darkMode ? "#1a1a1a" : "#fff";
-  ctx.fillRect(CBX_X + 1, CBX_Y + 1, CBX_SIZE - 2, CBX_SIZE - 2);
+  const drawRoundBtn = (
+    x: number, y: number, w: number, h: number,
+    fill: string, border: string, label: string, labelColor: string,
+    hovered: boolean,
+  ) => {
+    // Subtle outer glow on hover
+    if (hovered) {
+      ctx.shadowColor = border;
+      ctx.shadowBlur  = 10;
+    }
+    ctx.beginPath();
+    ctx.moveTo(x + BTN_R, y);
+    ctx.lineTo(x + w - BTN_R, y);
+    ctx.arcTo(x + w, y, x + w, y + BTN_R, BTN_R);
+    ctx.lineTo(x + w, y + h - BTN_R);
+    ctx.arcTo(x + w, y + h, x + w - BTN_R, y + h, BTN_R);
+    ctx.lineTo(x + BTN_R, y + h);
+    ctx.arcTo(x, y + h, x, y + h - BTN_R, BTN_R);
+    ctx.lineTo(x, y + BTN_R);
+    ctx.arcTo(x, y, x + BTN_R, y, BTN_R);
+    ctx.closePath();
+    ctx.fillStyle = fill;
+    ctx.fill();
+    ctx.shadowBlur  = 0;
+    ctx.shadowColor = "transparent";
+    ctx.strokeStyle = border;
+    ctx.lineWidth   = hovered ? 2.5 : 1.5;
+    ctx.stroke();
+    ctx.fillStyle    = labelColor;
+    ctx.font         = `bold ${Math.round(BTN_H2 * 0.44)}px ${displayFont}`;
+    ctx.textAlign    = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(label, x + w / 2, y + h / 2);
+  };
 
-  ctx.fillStyle    = t.fg;
-  ctx.font         = `15px ${bodyFont}`;
-  ctx.textAlign    = "left";
-  ctx.textBaseline = "middle";
-  ctx.fillText("I Accept", CBX_X + CBX_SIZE + 8, BTN_Y + BTN_H2 / 2);
-
+  // Accept — green
+  const acceptHovered = gc.mouseX >= ACCEPT_X && gc.mouseX <= ACCEPT_X + BTN_W2 &&
+                        gc.mouseY >= BTN_Y    && gc.mouseY <= BTN_Y + BTN_H2;
+  drawRoundBtn(
+    ACCEPT_X, BTN_Y, BTN_W2, BTN_H2,
+    acceptHovered ? "#2ecc71" : "#1e5230",
+    acceptHovered ? "#58d68d" : "#4caf7d",
+    "I ACCEPT",
+    acceptHovered ? "#ffffff" : "#d4f5e2",
+    acceptHovered,
+  );
   gc.hitAreas.push({
-    x: CBX_X - 4, y: BTN_Y, w: 130, h: BTN_H2,
+    x: ACCEPT_X, y: BTN_Y, w: BTN_W2, h: BTN_H2,
     action: () => {
       if (hasReachedBottom) {
         scrollOffset     = 0;
@@ -712,21 +746,24 @@ export const drawLevel2 = (gc: GameContext) => {
     },
   });
 
-  // Decline button
-  const DECLINE_W = 110;
-  const DECLINE_X = topBoxX + topBoxWidth - PAD - DECLINE_W - 12;
-  drawButton(gc, "DECLINE", DECLINE_X, BTN_Y, DECLINE_W, BTN_H2, () => {
-    scrollOffset     = 0;
-    hasReachedBottom = false;
-    gc.render();
-  }, 15);
+  // Decline — red
+  const declineHovered = gc.mouseX >= DECLINE_X && gc.mouseX <= DECLINE_X + BTN_W2 &&
+                         gc.mouseY >= BTN_Y      && gc.mouseY <= BTN_Y + BTN_H2;
+  drawRoundBtn(
+    DECLINE_X, BTN_Y, BTN_W2, BTN_H2,
+    declineHovered ? "#e74c3c" : "#5c1a1a",
+    declineHovered ? "#f1948a" : "#c0504f",
+    "DECLINE",
+    declineHovered ? "#ffffff" : "#fde0e0",
+    declineHovered,
+  );
+  gc.hitAreas.push({
+    x: DECLINE_X, y: BTN_Y, w: BTN_W2, h: BTN_H2,
+    action: () => {
+      scrollOffset     = 0;
+      hasReachedBottom = false;
+      gc.render();
+    },
+  });
 
-  // ── Scroll nudge ──────────────────────────────────────────────────────────
-  if (scrollOffset < 10) {
-    ctx.fillStyle    = state.darkMode ? "#444" : "#bbb";
-    ctx.font         = `11px ${bodyFont}`;
-    ctx.textAlign    = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("▼  scroll to read  ▼", cx, BOX_TOP + BOX_H - 14);
-  }
 };

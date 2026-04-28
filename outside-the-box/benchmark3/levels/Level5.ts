@@ -2,8 +2,8 @@ import { GameContext } from '../types';
 import { getTheme }    from '../theme';
 import { getLayout }   from '../layout';
 
-const BTN_W  = 162;
-const BTN_H  = 52;
+const BTN_W  = 240;
+const BTN_H  = Math.round(BTN_W * (215 / 1060));
 const DOT_R  = 5;
 const FLEE_R = 260;   // radius at which repulsion starts
 const FORCE  = 2800;  // repulsion acceleration (units/sec²)
@@ -13,13 +13,15 @@ let btnX  = -1;
 let btnY  = -1;
 let btnVX = 0;
 let btnVY = 0;
-let animId5 = 0;
+let animId5   = 0;
+let wasFleeing = false;
 
 function resetBtn() {
   btnX  = -1;
   btnY  = -1;
   btnVX = 0;
   btnVY = 0;
+  wasFleeing = false;
 }
 
 export const drawLevel5 = (gc: GameContext) => {
@@ -45,12 +47,18 @@ export const drawLevel5 = (gc: GameContext) => {
   const dist  = Math.sqrt(dx * dx + dy * dy);
   const dt    = 1 / 60;   // assume ~60fps for the physics step
 
-  if (dist < FLEE_R && dist > 1) {
+  const isFleeing = dist < FLEE_R && dist > 1;
+  if (isFleeing) {
     // Repulsion force gets stronger the closer the cursor is
     const mag = FORCE * Math.pow((FLEE_R - dist) / FLEE_R, 1.5) * dt;
     btnVX -= (dx / dist) * mag;
     btnVY -= (dy / dist) * mag;
+    // Play sound on the leading edge of each new approach
+    if (!wasFleeing) {
+      gc.sounds.play("clickDontClick", { volume: 0.6 });
+    }
   }
+  wasFleeing = isFleeing;
 
   // Apply damping and integrate
   btnVX *= DAMP;
@@ -74,13 +82,17 @@ export const drawLevel5 = (gc: GameContext) => {
   const hovered = gc.mouseX >= btnX && gc.mouseX <= btnX + BTN_W &&
                   gc.mouseY >= btnY && gc.mouseY <= btnY + BTN_H;
 
-  ctx.strokeStyle  = t.stroke;
-  ctx.lineWidth    = 3;
-  ctx.strokeRect(btnX, btnY, BTN_W, BTN_H);
-  ctx.fillStyle    = t.fg;
+  if (gc.levelBGLoaded) {
+    ctx.drawImage(gc.levelBGImg, 326, 132, 888, 810, btnX, btnY, BTN_W, BTN_H);
+  } else {
+    ctx.strokeStyle = t.stroke;
+    ctx.lineWidth   = 3;
+    ctx.strokeRect(btnX, btnY, BTN_W, BTN_H);
+  }
+  ctx.fillStyle    = "#1a1a1a";
   ctx.textAlign    = "center";
   ctx.textBaseline = "middle";
-  ctx.font         = `bold 22px ${displayFont}`;
+  ctx.font         = `bold ${Math.round(BTN_H * 0.42)}px ${displayFont}`;
   ctx.fillText(hovered ? "DONT CLICK" : "CLICK ME", btnX + BTN_W / 2, btnY + BTN_H / 2);
 
   gc.hitAreas.push({

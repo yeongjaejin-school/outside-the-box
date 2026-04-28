@@ -28,8 +28,7 @@ function allCorrect(cells: Cell[][]): boolean {
 }
 
 // ── Module state ──────────────────────────────────────────────────────────────
-let cells23:  Cell[][] = fresh23();
-let feedback: string   = '';
+let cells23: Cell[][] = fresh23();
 
 // ── Draw ──────────────────────────────────────────────────────────────────────
 export const drawLevel23 = (gc: GameContext) => {
@@ -61,8 +60,7 @@ export const drawLevel23 = (gc: GameContext) => {
 
   // ── Init ──────────────────────────────────────────────────────────────────────
   if (state.levelSubPhase !== 'active') {
-    cells23  = fresh23();
-    feedback = '';
+    cells23 = fresh23();
     state.levelSubPhase = 'active';
   }
 
@@ -193,13 +191,6 @@ export const drawLevel23 = (gc: GameContext) => {
   ctx.font         = `10px ${bodyFont}`;
   ctx.fillText('Click cells to cycle  T / F / —', cx, tblY + tblH + 10);
 
-  // ── Feedback message ──────────────────────────────────────────────────────────
-  if (feedback) {
-    ctx.fillStyle = state.darkMode ? '#ffaa44' : '#aa5500';
-    ctx.font      = `bold 12px ${bodyFont}`;
-    ctx.fillText(feedback, cx, tblY + tblH + 24);
-  }
-
   // ── Conclusion options ────────────────────────────────────────────────────────
   const tableOK = allFilled(cells23) && allCorrect(cells23);
   const optBtnW = topBoxWidth  * 0.44;
@@ -209,10 +200,10 @@ export const drawLevel23 = (gc: GameContext) => {
   const optY0   = topBoxY + topBoxHeight * 0.78;
 
   const opts = [
-    { text: 'A)  Protocol is always satisfied',         right: false },
-    { text: 'B)  Satisfied only when vault is sealed',  right: false },
-    { text: 'C)  Satisfied when both conditions match', right: true  },
-    { text: 'D)  Protocol is never satisfied',          right: false },
+    { text: 'Protocol is always satisfied',         right: false },
+    { text: 'Satisfied only when vault is sealed',  right: false },
+    { text: 'Satisfied when both conditions match', right: true  },
+    { text: 'Protocol is never satisfied',          right: false },
   ];
 
   opts.forEach((opt, i) => {
@@ -221,20 +212,19 @@ export const drawLevel23 = (gc: GameContext) => {
     const bx  = cx - optBtnW - optGapX / 2 + col * (optBtnW + optGapX);
     const by  = optY0 + row * (optBtnH + optGapY);
 
-    // Highlight correct option once table is proven
-    const isUnlocked = opt.right && tableOK;
-    ctx.fillStyle   = isUnlocked
-      ? (state.darkMode ? '#1a3a22' : '#c8ecd2')
-      : (state.darkMode ? '#1c1c1c' : '#e2e2e2');
-    ctx.strokeStyle = isUnlocked ? (state.darkMode ? '#55cc77' : '#1a7a3a') : t.divider;
-    ctx.lineWidth   = isUnlocked ? 2 : 1;
-    ctx.fillRect(bx, by, optBtnW, optBtnH);
-    ctx.strokeRect(bx, by, optBtnW, optBtnH);
+    // Uniform stone-tile background — same as Level 3 / Level 9 buttons
+    if (gc.levelBGLoaded) {
+      ctx.drawImage(gc.levelBGImg, 326, 132, 888, 810, bx, by, optBtnW, optBtnH);
+    } else {
+      ctx.strokeStyle = t.stroke;
+      ctx.lineWidth   = 1.5;
+      ctx.strokeRect(bx, by, optBtnW, optBtnH);
+    }
 
-    ctx.fillStyle    = opt.right && !tableOK ? t.fgDim : t.fg;
+    ctx.fillStyle    = '#1a1a1a';
     ctx.textAlign    = 'center';
     ctx.textBaseline = 'middle';
-    ctx.font         = `${isUnlocked ? 'bold ' : ''}12px ${bodyFont}`;
+    ctx.font         = `bold 12px ${bodyFont}`;
     ctx.fillText(opt.text, bx + optBtnW / 2, by + optBtnH / 2, optBtnW - 12);
 
     gc.hitAreas.push({
@@ -243,10 +233,6 @@ export const drawLevel23 = (gc: GameContext) => {
         if (opt.right) {
           if (tableOK) {
             state.levelSubPhase = 'win';
-          } else if (!allFilled(cells23)) {
-            feedback = 'You have not proven it yet — complete the truth table first.';
-          } else {
-            feedback = 'Your table contains errors. Review your work.';
           }
         } else {
           gc.loseLife();

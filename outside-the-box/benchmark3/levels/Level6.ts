@@ -8,6 +8,10 @@ import State           from '../../../Wolfie2D/DataTypes/State/State';
 import GameEvent       from '../../../Wolfie2D/Events/GameEvent';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
+// Offset into pongBallBounce.mp3 where the actual hit sound sits.
+// Adjust this if the bounce feels early/late (seconds).
+const BOUNCE_OFFSET = 0.45;
+
 const PADDLE_H      = 0.22;   // fraction of court height
 const PADDLE_W      = 0.018;  // fraction of court width
 const BALL_R        = 0.013;  // fraction of court width
@@ -275,10 +279,12 @@ export const drawLevel6 = (gc: GameContext) => {
     if (ballPos.y - BALL_R < 0) {
       ballPos = new Vec2(ballPos.x, BALL_R);
       ballVel = new Vec2(ballVel.x, Math.abs(ballVel.y));
+      gc.sounds.play("pongBounce", { volume: 0.7, startTime: BOUNCE_OFFSET });
     }
     if (ballPos.y + BALL_R > 1) {
       ballPos = new Vec2(ballPos.x, 1 - BALL_R);
       ballVel = new Vec2(ballVel.x, -Math.abs(ballVel.y));
+      gc.sounds.play("pongBounce", { volume: 0.7, startTime: BOUNCE_OFFSET });
     }
 
     // Player paddle — right face at PLAYER_LEFT + PADDLE_W
@@ -291,6 +297,7 @@ export const drawLevel6 = (gc: GameContext) => {
       const deflect  = ((ballPos.y - playerY) / (PADDLE_H / 2)) * 0.65;
       ballPos = new Vec2(playerRight + BALL_R, ballPos.y);
       ballVel = new Vec2(newSpeed, deflect);
+      gc.sounds.play("pongBounce", { volume: 0.7, startTime: BOUNCE_OFFSET });
     }
 
     // AI paddle — left face at AI_RIGHT - PADDLE_W
@@ -303,6 +310,7 @@ export const drawLevel6 = (gc: GameContext) => {
       const deflect  = ((ballPos.y - pongAI.data.aiY) / (PADDLE_H / 2)) * 0.65;
       ballPos = new Vec2(aiLeft - BALL_R, ballPos.y);
       ballVel = new Vec2(-newSpeed, deflect);
+      gc.sounds.play("pongBounce", { volume: 0.7, startTime: BOUNCE_OFFSET });
     }
 
     // ── Wolfie2D StateMachine AI update ──────────────────────────────────

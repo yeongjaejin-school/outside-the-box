@@ -157,10 +157,40 @@ window.onload = () => {
     const config = MOVEMENT_LEVEL_CONFIG[gc.state.currentLevel] ?? MOVEMENT_LEVEL_CONFIG[11];
     const { x, y, width, height } = gc.movementArea;
     const size = player.width;
+    const spawnX = gc.movementArea.x + player.width;
+    const spawnY = gc.movementArea.y + gc.movementArea.height / 2 - player.height / 2;
+    const occupiedRects: Array<{ x: number; y: number; size: number }> = [
+      { x: spawnX, y: spawnY, size: player.width },
+    ];
+    const randomizePosition = () => {
+      const maxAttempts = 80;
+
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        const candidateX = x + Math.random() * Math.max(0, width - size);
+        const candidateY = y + Math.random() * Math.max(0, height - size);
+        const collides = occupiedRects.some((rect) => (
+          candidateX < rect.x + rect.size &&
+          candidateX + size > rect.x &&
+          candidateY < rect.y + rect.size &&
+          candidateY + size > rect.y
+        ));
+
+        if (!collides) {
+          occupiedRects.push({ x: candidateX, y: candidateY, size });
+          return { x: candidateX, y: candidateY };
+        }
+      }
+
+      const fallbackX = x + Math.random() * Math.max(0, width - size);
+      const fallbackY = y + Math.random() * Math.max(0, height - size);
+      occupiedRects.push({ x: fallbackX, y: fallbackY, size });
+      return { x: fallbackX, y: fallbackY };
+    };
 
     return config.blocks.map((block): Block => {
-      const blockX = x + width * block.x;
-      const blockY = y + height * block.y;
+      const randomizedPosition = randomizePosition();
+      const blockX = randomizedPosition.x;
+      const blockY = randomizedPosition.y;
 
       switch (block.type) {
         case "invisible":
@@ -244,8 +274,12 @@ window.onload = () => {
   gc.submitMovementAnswer = () => {
     const currentAnswer = gc.getCurrentAnswer();
     const config = MOVEMENT_LEVEL_CONFIG[gc.state.currentLevel] ?? MOVEMENT_LEVEL_CONFIG[11];
+    const answerMode = config.answerMode ?? "fixed";
+    const isCorrect = answerMode === "timeLeftFloor"
+      ? Number(currentAnswer) === Math.floor(gc.timeLeftSeconds)
+      : currentAnswer === gc.quizAnswer;
 
-    if (currentAnswer !== gc.quizAnswer) {
+    if (!isCorrect) {
       gc.sounds.play("wrongAnswer", { volume: 0.55 });
       gc.loseLife();
       needsMovementReset = true;

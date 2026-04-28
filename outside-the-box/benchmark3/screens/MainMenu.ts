@@ -5,25 +5,26 @@ import { drawButton, drawImgButton }  from '../renderer';
 
 export const drawMainMenu = (gc: GameContext) => {
   const { ctx, state, displayFont } = gc;
-  const { w, topInnerX, topInnerY, topInnerWidth, topInnerHeight } = getLayout(ctx);
+  const { w, topBoxY, topBoxWidth, topBoxHeight } = getLayout(ctx);
   const cx = w / 2;
   const t  = getTheme(state);
 
-  ctx.fillStyle    = t.fg;
-  ctx.textAlign    = "center";
-  ctx.textBaseline = "middle";
+  const btnW = topBoxWidth * 0.38;
+  const btnX = cx - btnW / 2;
+  const gap  = 20;
 
-  ctx.font = `bold 42px ${displayFont}`;
-  ctx.fillText("MAIN MENU", cx, topInnerY + topInnerHeight * 0.15);
+  // Each button's height is driven by its own image aspect ratio
+  const h1 = btnW * (197 / 1026);
+  const h2 = btnW * (217 / 1044);
+  const h3 = btnW * (206 / 951);
 
-  const btnW   = Math.min(300, topInnerWidth * 0.78);
-  const btnH   = 50;
-  const btnX   = cx - btnW / 2;
-  const startY = topInnerY + topInnerHeight * 0.32;
-  const stride = btnH + 14;
+  const totalH = h1 + h2 + h3 + gap * 2;
+  const y1 = topBoxY + (topBoxHeight - totalH) / 2;
+  const y2 = y1 + h1 + gap;
+  const y3 = y2 + h2 + gap;
 
   drawImgButton(gc, gc.startExamImg, gc.startExamLoaded,
-    255, 378, 1026, 197, btnX, startY, btnW,
+    255, 378, 1026, 197, btnX, y1, btnW,
     () => {
       state.currentLevel  = 1;
       state.lives         = 3;
@@ -32,6 +33,7 @@ export const drawMainMenu = (gc: GameContext) => {
       state.skips         = 0;
       state.levelSubPhase = "";
       state.playMode      = "play";
+      state.examStartTime = 0;
       state.currentScreen = "level";
       gc.render();
     },
@@ -39,13 +41,13 @@ export const drawMainMenu = (gc: GameContext) => {
   );
 
   drawImgButton(gc, gc.levelSelectImg, gc.levelSelectLoaded,
-    247, 337, 1044, 217, btnX, startY + stride, btnW,
+    247, 337, 1044, 217, btnX, y2, btnW,
     () => { state.currentScreen = "levelselect"; gc.render(); },
     "LEVEL SELECT",
   );
 
   drawImgButton(gc, gc.controlsImg, gc.controlsLoaded,
-    294, 379, 951, 206, btnX, startY + stride * 2, btnW,
+    294, 379, 951, 206, btnX, y3, btnW,
     () => { state.controlsOpen = true; gc.render(); },
     "CONTROLS",
   );

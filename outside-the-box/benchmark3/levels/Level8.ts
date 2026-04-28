@@ -15,141 +15,137 @@ export const drawLevel8 = (gc: GameContext) => {
   ctx.fillStyle = t.bg;
   ctx.fillRect(topBoxX, topBoxY, topBoxWidth, topBoxHeight);
 
-  // ── shared panel ──────────────────────────────────────────────────────────
+  // ── shared panel (no border) ──────────────────────────────────────────────
   const panelW = topBoxWidth  * 0.82;
   const panelH = topBoxHeight * 0.80;
   const panelX = topBoxX + (topBoxWidth  - panelW) / 2;
   const panelY = topBoxY + (topBoxHeight - panelH) / 2;
 
-  ctx.fillStyle   = t.bg;
+  ctx.fillStyle = t.bg;
   ctx.fillRect(panelX, panelY, panelW, panelH);
-  ctx.strokeStyle = t.stroke;
-  ctx.lineWidth   = 3;
-  ctx.strokeRect(panelX, panelY, panelW, panelH);
 
   // ── PHASE: stranger ───────────────────────────────────────────────────────
   if (phase === "stranger") {
-    const headR   = panelH * 0.075;
-    const figCX   = panelX + panelW * 0.18;
-    const figTopY = panelY + panelH * 0.06;
-    const bodyTop = figTopY + headR * 2.3;
-    const bodyH   = panelH * 0.24;
-    const bodyW   = headR * 2.5;
+    // Beggar image — left side of panel
+    const imgW = panelW * 0.30;
+    const imgH = gc.beggarLoaded
+      ? imgW * (gc.beggarImg.naturalHeight / gc.beggarImg.naturalWidth)
+      : imgW;
+    const imgX = panelX + panelW * 0.005;
+    const imgY = panelY + (panelH * 0.82 - imgH) / 2;
+    if (gc.beggarLoaded) {
+      ctx.drawImage(gc.beggarImg, imgX, imgY, imgW, imgH);
+    }
 
-    // figure — warm neutral, not sinister
-    const figColor = state.darkMode ? "#a08870" : "#8a6a50";
-    ctx.fillStyle   = figColor;
-    ctx.strokeStyle = figColor;
+    // ── Speech bubble (canvas-drawn rounded rect) ─────────────────────────
+    const bubbleX = panelX + panelW * 0.33;
+    const bubbleY = panelY + panelH * 0.03;
+    const bubbleW = panelW * 0.63;
+    const bubbleH = panelH * 0.60;
+    // Stone-matching flat color — same visual tone as the levelBGImg button tiles
+    // without the distortion caused by scaling the framed button image to bubble size
+    const bubbleFill   = "#c5c0b5";
+    const bubbleRadius = 12;
 
-    // head
+    // Pointer triangle
+    const ptrTip = bubbleX - panelW * 0.03;
+    ctx.fillStyle = bubbleFill;
     ctx.beginPath();
-    ctx.arc(figCX, figTopY + headR, headR, 0, Math.PI * 2);
+    ctx.moveTo(bubbleX, bubbleY + bubbleH * 0.36);
+    ctx.lineTo(ptrTip,  bubbleY + bubbleH * 0.50);
+    ctx.lineTo(bubbleX, bubbleY + bubbleH * 0.58);
     ctx.fill();
 
-    // body
-    ctx.fillRect(figCX - bodyW / 2, bodyTop, bodyW, bodyH);
-
-    // arms — one outstretched (pleading)
-    ctx.lineWidth = headR * 0.58;
-    ctx.beginPath();
-    // left arm reaching out toward viewer
-    ctx.moveTo(figCX + bodyW / 2, bodyTop + bodyH * 0.15);
-    ctx.lineTo(figCX + bodyW * 2.1, bodyTop + bodyH * 0.05);
-    // right arm hanging low (dejected)
-    ctx.moveTo(figCX - bodyW / 2, bodyTop + bodyH * 0.15);
-    ctx.lineTo(figCX - bodyW * 1.1, bodyTop + bodyH * 0.75);
-    ctx.stroke();
-
-    // legs
-    ctx.beginPath();
-    ctx.moveTo(figCX - bodyW * 0.2, bodyTop + bodyH);
-    ctx.lineTo(figCX - bodyW * 0.55, bodyTop + bodyH * 1.55);
-    ctx.moveTo(figCX + bodyW * 0.2, bodyTop + bodyH);
-    ctx.lineTo(figCX + bodyW * 0.55, bodyTop + bodyH * 1.55);
-    ctx.stroke();
-
-    // teardrop under eye
-    ctx.fillStyle = state.darkMode ? "#5588bb" : "#3366aa";
-    ctx.beginPath();
-    ctx.ellipse(figCX + headR * 0.35, figTopY + headR * 1.45, headR * 0.12, headR * 0.2, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // speech bubble
-    const bubbleX = figCX + bodyW * 2.2;
-    const bubbleY = figTopY;
-    const bubbleW = panelW * 0.60;
-    const bubbleH = panelH * 0.52;
-
-    ctx.fillStyle   = state.darkMode ? "#1e1e2e" : "#f7f4ef";
+    // Bubble background + border
+    ctx.fillStyle   = bubbleFill;
     ctx.strokeStyle = t.stroke;
     ctx.lineWidth   = 2;
     ctx.beginPath();
-    ctx.roundRect(bubbleX, bubbleY, bubbleW, bubbleH, 12);
+    ctx.roundRect(bubbleX, bubbleY, bubbleW, bubbleH, bubbleRadius);
     ctx.fill();
     ctx.stroke();
 
-    // bubble pointer
-    ctx.fillStyle = state.darkMode ? "#1e1e2e" : "#f7f4ef";
-    ctx.beginPath();
-    ctx.moveTo(bubbleX,              bubbleY + bubbleH * 0.35);
-    ctx.lineTo(bubbleX - headR * 1.4, bubbleY + bubbleH * 0.50);
-    ctx.lineTo(bubbleX,              bubbleY + bubbleH * 0.56);
-    ctx.fill();
-    ctx.strokeStyle = t.stroke;
-    ctx.lineWidth   = 2;
-    ctx.beginPath();
-    ctx.moveTo(bubbleX,              bubbleY + bubbleH * 0.35);
-    ctx.lineTo(bubbleX - headR * 1.4, bubbleY + bubbleH * 0.50);
-    ctx.lineTo(bubbleX,              bubbleY + bubbleH * 0.56);
-    ctx.stroke();
-
-    // speech text
+    // Speech text
     const bx = bubbleX + bubbleW / 2;
     ctx.textAlign    = "center";
     ctx.textBaseline = "top";
 
-    ctx.fillStyle = t.fg;
+    ctx.fillStyle = "#1a1a1a";
     ctx.font      = `bold 15px ${bodyFont}`;
-    ctx.fillText("Please… I'm begging you.", bx, bubbleY + bubbleH * 0.06, bubbleW * 0.86);
+    ctx.fillText("Please\u2026 I\u2019m begging you.", bx, bubbleY + bubbleH * 0.07, bubbleW * 0.84);
 
-    ctx.fillStyle = t.fgMid;
     ctx.font      = `14px ${bodyFont}`;
+    ctx.fillStyle = "#2a2a2a";
     const speechLines = [
       "My daughter needs a heart transplant.",
-      "Without it, she won't survive the week.",
+      "Without it, she won\u2019t survive the week.",
       "",
-      "I'll give you 3 level skips in exchange",
+      "I\u2019ll give you 3 level skips in exchange",
       "for just one of your hearts.",
       "",
       "You have plenty to spare.",
       "She has nothing.",
     ];
-    const slH = 22;
+    const slH      = 21;
     const slStartY = bubbleY + bubbleH * 0.20;
     for (let i = 0; i < speechLines.length; i++) {
-      ctx.fillText(speechLines[i], bx, slStartY + i * slH, bubbleW * 0.86);
+      ctx.fillText(speechLines[i], bx, slStartY + i * slH, bubbleW * 0.84);
     }
 
-    // buttons
-    const btnW    = 170;
-    const btnH    = 44;
-    const btnGap  = panelW * 0.05;
-    const totalBW = btnW * 2 + btnGap;
-    const btnY    = panelY + panelH * 0.84;
+    // ── Buttons ───────────────────────────────────────────────────────────
+    const btnW      = 170;
+    const btnH      = 52;
+    const btnGap    = panelW * 0.05;
+    const totalBW   = btnW * 2 + btnGap;
+    const btnY      = panelY + panelH * 0.82;
     const btnStartX = cx - totalBW / 2;
 
-    drawButton(gc, "Give Heart", btnStartX, btnY, btnW, btnH, () => {
-      gc.loseLife();
-      state.levelSubPhase = "scammed";
-      gc.render();
-    }, 18);
+    // "Give Heart" — level selector tile background + heart PNG on top
+    if (gc.levelBGLoaded) {
+      ctx.drawImage(gc.levelBGImg, 326, 132, 888, 810, btnStartX, btnY, btnW, btnH);
+    } else {
+      ctx.strokeStyle = t.stroke;
+      ctx.lineWidth   = 2;
+      ctx.strokeRect(btnStartX, btnY, btnW, btnH);
+    }
+    if (gc.heartLoaded) {
+      const heartSize = Math.round(btnH * 0.72);
+      const hx = btnStartX + btnW / 2 - heartSize / 2;
+      const hy = btnY + btnH / 2 - heartSize / 2;
+      ctx.drawImage(gc.heartImg, 274, 0, 1011, 864, hx, hy, heartSize, heartSize);
+    }
+    gc.hitAreas.push({
+      x: btnStartX, y: btnY, w: btnW, h: btnH,
+      action: () => {
+        gc.loseLife();
+        state.levelSubPhase = "scammed";
+        gc.render();
+      },
+    });
 
-    drawButton(gc, "Let a Child Die", btnStartX + btnW + btnGap, btnY, btnW, btnH, () => {
-      state.currentLevel  = 9;
-      state.levelSubPhase = "";
-      state.levelTimerEnd = 0;
-      gc.render();
-    }, 18);
+    // "Let a CHILD Die" — same stone tile background as Give Heart
+    const childBtnX = btnStartX + btnW + btnGap;
+    if (gc.levelBGLoaded) {
+      ctx.drawImage(gc.levelBGImg, 326, 132, 888, 810, childBtnX, btnY, btnW, btnH);
+    } else {
+      ctx.strokeStyle = t.stroke;
+      ctx.lineWidth   = 2;
+      ctx.strokeRect(childBtnX, btnY, btnW, btnH);
+    }
+    ctx.fillStyle    = "#1a1a1a";
+    ctx.textAlign    = "center";
+    ctx.textBaseline = "middle";
+    ctx.font         = `bold 15px ${displayFont}`;
+    ctx.fillText("Let a CHILD Die", childBtnX + btnW / 2, btnY + btnH / 2);
+    gc.hitAreas.push({
+      x: childBtnX, y: btnY, w: btnW, h: btnH,
+      action: () => {
+        state.currentLevel  = 9;
+        state.levelSubPhase = "";
+        state.levelTimerEnd = 0;
+        gc.render();
+      },
+    });
 
     return;
   }
@@ -159,28 +155,27 @@ export const drawLevel8 = (gc: GameContext) => {
     ctx.textAlign    = "center";
     ctx.textBaseline = "top";
 
-    ctx.fillStyle = t.fg;
-    ctx.font      = `bold 26px ${displayFont}`;
-    ctx.fillText("He's gone.", cx, panelY + panelH * 0.09, panelW * 0.82);
-
-    ctx.font      = `italic 16px ${bodyFont}`;
     ctx.fillStyle = state.darkMode ? "#888899" : "#777788";
-    ctx.fillText("— and so is your heart.", cx, panelY + panelH * 0.20, panelW * 0.82);
+    ctx.font      = `italic 15px ${bodyFont}`;
+    ctx.fillText("*The man runs off with your heart*", cx, panelY + panelH * 0.08, panelW * 0.82);
 
-    ctx.font      = `18px ${bodyFont}`;
+    ctx.fillStyle = t.fg;
+    ctx.font      = `bold 22px ${displayFont}`;
+    ctx.fillText("\"Gullible, are ya?\"", cx, panelY + panelH * 0.20, panelW * 0.82);
+
+    ctx.font      = `16px ${bodyFont}`;
     ctx.fillStyle = t.fgMid;
     const msg = [
-      "The stranger snatched your heart and",
-      "vanished into the crowd.",
+      "Did you even see a child with him?",
+      "He will probably sell it on the dark web or something.",
       "",
-      "There was no daughter.",
-      "There never was.",
+      "What's even worse is I think he had a Tatum Jersey on.",
+      "Imagine he buys Celtics tickets with the money?",
       "",
-      "Have your parents never taught you",
-      "stranger danger?",
+      "What a waste!",
     ];
-    const lineH  = 28;
-    const startY = panelY + panelH * 0.30;
+    const lineH  = 26;
+    const startY = panelY + panelH * 0.34;
     for (let i = 0; i < msg.length; i++) {
       ctx.fillText(msg[i], cx, startY + i * lineH, panelW * 0.82);
     }

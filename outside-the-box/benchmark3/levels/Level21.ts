@@ -8,6 +8,9 @@ import State           from '../../../Wolfie2D/DataTypes/State/State';
 import GameEvent       from '../../../Wolfie2D/Events/GameEvent';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
+// Offset into pongBallBounce.mp3 where the actual hit sound sits (seconds).
+const BOUNCE_OFFSET = 0.45;
+
 const PLAYER_H    = 0.18;   // player paddle height (fraction of court)
 const FRODRICK_H  = 0.46;   // Frodrick's paddle — absurdly long
 const PADDLE_W    = 0.018;
@@ -276,10 +279,12 @@ export const drawLevel21 = (gc: GameContext) => {
     if (ballPos21.y - BALL_R < 0) {
       ballPos21 = new Vec2(ballPos21.x, BALL_R);
       ballVel21 = new Vec2(ballVel21.x, Math.abs(ballVel21.y));
+      gc.sounds.play("pongBounce", { volume: 0.7, startTime: BOUNCE_OFFSET });
     }
     if (ballPos21.y + BALL_R > 1) {
       ballPos21 = new Vec2(ballPos21.x, 1 - BALL_R);
       ballVel21 = new Vec2(ballVel21.x, -Math.abs(ballVel21.y));
+      gc.sounds.play("pongBounce", { volume: 0.7, startTime: BOUNCE_OFFSET });
     }
 
     // Player paddle collision
@@ -292,6 +297,7 @@ export const drawLevel21 = (gc: GameContext) => {
       const deflect  = ((ballPos21.y - playerY21) / (PLAYER_H / 2)) * 0.65;
       ballPos21 = new Vec2(playerRight + BALL_R, ballPos21.y);
       ballVel21 = new Vec2(newSpeed, deflect);
+      gc.sounds.play("pongBounce", { volume: 0.7, startTime: BOUNCE_OFFSET });
     }
 
     // Frodrick paddle collision
@@ -304,6 +310,7 @@ export const drawLevel21 = (gc: GameContext) => {
       const deflect  = ((ballPos21.y - frodrick.data.aiY) / (FRODRICK_H / 2)) * 0.65;
       ballPos21 = new Vec2(aiLeft - BALL_R, ballPos21.y);
       ballVel21 = new Vec2(-newSpeed, deflect);
+      gc.sounds.play("pongBounce", { volume: 0.7, startTime: BOUNCE_OFFSET });
     }
 
     // ── Wolfie2D StateMachine drives Frodrick ────────────────────────────────
