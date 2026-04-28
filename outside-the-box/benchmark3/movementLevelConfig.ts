@@ -10,6 +10,7 @@ export type MovementBlockConfig = {
 export type MovementLevelConfig = {
   prompt: string;
   answer: string;
+  answerMode?: "fixed" | "timeLeftFloor";
   time: number;
   blocks: MovementBlockConfig[];
 };
@@ -118,15 +119,16 @@ export const MOVEMENT_LEVEL_CONFIG: Record<number, MovementLevelConfig> = {
     ],
   },
   20: {
-    prompt: "Final playtest: spell MIX with every block family present.",
-    answer: "MIX",
-    time: 48,
+    prompt: "We are almost running out of time...How many seconds left?",
+    answer: "",
+    answerMode: "timeLeftFloor",
+    time: 60,
     blocks: [
-      { x: 0.14, y: 0.28, value: "M", type: "normal" },
-      { x: 0.32, y: 0.48, value: "I", type: "invisible" },
-      { x: 0.52, y: 0.28, value: "X", type: "glass" },
+      { x: 0.14, y: 0.28, value: 10, type: "countdown" },
+      { x: 0.32, y: 0.48, value: 4, type: "normal" },
+      { x: 0.52, y: 0.28, value: 11, type: "countdown" },
       { x: 0.70, y: 0.48, value: 5, type: "countdown" },
-      { x: 0.82, y: 0.30, value: "H", type: "heavy" },
+      { x: 0.82, y: 0.30, value: 7, type: "countdown" },
     ],
   },
 };
