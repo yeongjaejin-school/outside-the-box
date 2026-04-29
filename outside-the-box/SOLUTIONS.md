@@ -260,16 +260,16 @@ Open `benchmark2/index.html` in a browser (or serve via local HTTP). The game ru
 | 8 | The Stranger | Click "Let a Child Die" |
 | 9 | Calculus | Click the "9" in the Q.9 HUD label |
 | 10 | The Maze | Navigate dot (WASD) from bottom entry to glowing green top exit |
-| 11 |  |  |
-| 12 |  |  |
-| 13 |  |  |
-| 14 |  |  |
-| 15 |  |  |
-| 16 |  |  |
-| 17 |  |  |
-| 18 |  |  |
-| 19 |  |  |
-| 20 |  |  |
+| 11 | Practice question | Move C,A,T block to the answer zone |
+| 12 | Invisible Block | Move M, A, P block to the answer zone, A is hidden. |
+| 13 | Invisible + trick question | Move B,O,X. X is hidden. |
+| 14 | Trick | Move S,K,Y. BLUE is not answer. |
+| 15 | Math | Move 1,2,3. Use Countdown block to make 3. |
+| 16 | Trick | Move l,i,l,i,l,i. |
+| 17 | Trick | Move R,U,N,X,3 = (run x 3) |
+| 18 | Simple | Move O,N,E |
+| 19 | Pokemon reference | Move R,E,D |
+| 20 | Countdown | Move countdown blocks, set time, and click submit with right timing. |
 | 21 | Pong Round 2 | Hold mouse on Frodrick's paddle to freeze it, score 3 points |
 | 22 | Did You Catch That? | Pause during the 0.75s flash, read the 10-digit code, type it in |
 | 23 | Case File #7 | Fill truth table correctly, then click C |
